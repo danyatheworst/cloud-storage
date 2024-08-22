@@ -9,17 +9,13 @@ public class RequestSignUpDto {
 
     @NotBlank(message = "Login should be between 3 and 50 characters")
     @Size(min = 2, max = 50, message = "Login should be between 3 and 50 characters")
-    private String login;
+    private final String login;
 
-    @NotBlank(message = "Password should be between 6 and 50 characters")
-    @Size(min = 6, max = 50, message = "Password should be between 3 and 50 characters")
-    private String password;
+    @Size(min = 6, max = 50, message = "Password should be between 6 and 50 characters")
+    private final String password;
 
-    public void setLogin(String login) {
+    public RequestSignUpDto(String login, String password) {
         this.login = login.trim();
-    }
-
-    public void setPassword(String password) {
-        this.password = password.trim();
+        this.password = password;
     }
 }
