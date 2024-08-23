@@ -25,5 +25,4 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable); // Disabling CSRF in a non-deprecated way
         return http.build();
     }
-
 }
