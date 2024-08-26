@@ -1,6 +1,7 @@
 package danyatheworst.common;
 
 import danyatheworst.exceptions.EntityAlreadyExistsException;
+import danyatheworst.exceptions.InvalidCredentialsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -22,11 +23,19 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler({EntityAlreadyExistsException.class})
-    public ResponseEntity<ErrorResponseDto> handleStudentAlreadyExistsException(EntityAlreadyExistsException exception) {
+    @ExceptionHandler(EntityAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponseDto> handleEntityAlreadyExistsException(EntityAlreadyExistsException exception) {
         ErrorResponseDto errorResponseDto = new ErrorResponseDto(exception.getMessage());
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
+                .body(errorResponseDto);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ErrorResponseDto> handleInvalidCredentialsException(InvalidCredentialsException exception) {
+        ErrorResponseDto errorResponseDto = new ErrorResponseDto(exception.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
                 .body(errorResponseDto);
     }
 }

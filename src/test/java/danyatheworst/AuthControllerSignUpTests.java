@@ -3,8 +3,9 @@ package danyatheworst;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import danyatheworst.auth.AuthController;
-import danyatheworst.auth.RegistrationService;
+import danyatheworst.auth.AuthenticationService;
 import danyatheworst.auth.RequestSignUpDto;
+import danyatheworst.auth.RegistrationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -31,10 +32,13 @@ public class AuthControllerSignUpTests {
     private RegistrationService registrationService;
 
     @MockBean
+    private AuthenticationService authenticationService;
+
+    @MockBean
     private SecurityFilterChain securityFilterChain;
 
     @Test
-    void itShouldReturn409CodeWhenLoginConsistsOfMoreThanFiftyCharacters() throws Exception {
+    void itShouldReturn400CodeWhenLoginConsistsOfMoreThanFiftyCharacters() throws Exception {
         //given
         String login = "q".repeat(51);
         RequestSignUpDto signUpDto = new RequestSignUpDto(login, "password");
@@ -47,7 +51,7 @@ public class AuthControllerSignUpTests {
     }
 
     @Test
-    void itShouldReturn409CodeWhenTrimmedLoginConsistsOfLessThanTwoCharacters() throws Exception {
+    void itShouldReturn400CodeWhenTrimmedLoginConsistsOfLessThanTwoCharacters() throws Exception {
         //given
         String login = "           a          ";
         RequestSignUpDto signUpDto = new RequestSignUpDto(login, "password");
@@ -60,7 +64,7 @@ public class AuthControllerSignUpTests {
     }
 
     @Test
-    void itShouldReturn409CodeWhenLoginConsistsOfWhiteSpacesOnly() throws Exception {
+    void itShouldReturn400CodeWhenLoginConsistsOfWhiteSpacesOnly() throws Exception {
         //given
         String login = "   ";
         RequestSignUpDto signUpDto = new RequestSignUpDto(login, "password");
@@ -73,7 +77,7 @@ public class AuthControllerSignUpTests {
     }
 
     @Test
-    void itShouldReturn409CodeWhenPasswordConsistsOfLessThanSixCharacters() throws Exception {
+    void itShouldReturn400CodeWhenPasswordConsistsOfLessThanSixCharacters() throws Exception {
         //given
         String password = "12345";
         RequestSignUpDto signUpDto = new RequestSignUpDto("user", password);
@@ -86,7 +90,7 @@ public class AuthControllerSignUpTests {
     }
 
     @Test
-    void itShouldReturn409CodeWhenPasswordConsistsOfMoreThanFiftyCharacters() throws Exception {
+    void itShouldReturn400CodeWhenPasswordConsistsOfMoreThanFiftyCharacters() throws Exception {
         //given
         String password = " ".repeat(51);
         RequestSignUpDto signUpDto = new RequestSignUpDto("user", password);
@@ -106,7 +110,7 @@ public class AuthControllerSignUpTests {
     }
 
     private ResultMatcher loginValidationMessageError() {
-       return MockMvcResultMatchers.jsonPath("$.login_validation-error")
+       return MockMvcResultMatchers.jsonPath("$.username_validation-error")
                .value("Login should be between 2 and 50 characters");
     }
 

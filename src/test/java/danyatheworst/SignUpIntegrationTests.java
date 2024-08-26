@@ -63,7 +63,7 @@ public class SignUpIntegrationTests {
                 .andExpect(MockMvcResultMatchers.status().isCreated());
 
         Assertions.assertEquals(this.userRepository.findAll().size(), 1);
-        Assertions.assertEquals(this.userRepository.findByLogin("user").getLogin(), login);
+        Assertions.assertEquals(this.userRepository.findByUsername("user").get().getUsername(), login);
     }
 
     @Test
@@ -71,7 +71,7 @@ public class SignUpIntegrationTests {
         //given
         String login = "user";
         RequestSignUpDto signUpDto = new RequestSignUpDto(login, "password");
-        this.userRepository.save(new User(null, login, "password"));
+        this.userRepository.save(new User(login, "password"));
 
         //when and then
         this.mockMvc.perform(MockMvcRequestBuilders
