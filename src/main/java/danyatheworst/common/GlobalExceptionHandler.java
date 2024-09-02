@@ -1,6 +1,7 @@
 package danyatheworst.common;
 
 import danyatheworst.exceptions.EntityAlreadyExistsException;
+import danyatheworst.exceptions.InternalServerException;
 import danyatheworst.exceptions.InvalidCredentialsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +37,14 @@ public class GlobalExceptionHandler {
         ErrorResponseDto errorResponseDto = new ErrorResponseDto(exception.getMessage());
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
+                .body(errorResponseDto);
+    }
+
+    @ExceptionHandler(InternalServerException.class)
+    public ResponseEntity<ErrorResponseDto> handleInternalServerException(Exception exception) {
+        ErrorResponseDto errorResponseDto = new ErrorResponseDto(exception.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(errorResponseDto);
     }
 }
