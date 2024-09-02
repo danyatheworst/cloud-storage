@@ -1,4 +1,4 @@
-package danyatheworst.config;
+package danyatheworst.storage;
 
 import danyatheworst.exceptions.InvalidCredentialsException;
 import danyatheworst.user.UserRepository;
