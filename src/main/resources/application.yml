@@ -14,4 +14,10 @@ spring:
       port: 6379
       database: 0
 
+minio:
+  bucket: "user-files"
 
+#to handle exceptions
+server:
+  tomcat:
+    relaxed-query-chars: '\,/'
