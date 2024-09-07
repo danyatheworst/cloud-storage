@@ -1,19 +1,18 @@
 package danyatheworst.auth;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultMatcher;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import java.util.stream.Stream;
 
 @WebMvcTest(AuthController.class)
 public class AuthControllerSignUpTests {
@@ -33,85 +32,46 @@ public class AuthControllerSignUpTests {
     @MockBean
     private SecurityFilterChain securityFilterChain;
 
-    @Test
-    void itShouldReturn400CodeWhenLoginConsistsOfMoreThanFiftyCharacters() throws Exception {
-        //given
-        String login = "q".repeat(51);
+    @ParameterizedTest
+    @MethodSource("invalidLoginProvider")
+    void itShouldReturn400CodeForInvalidLogin(String login) throws Exception {
         RequestSignUpDto signUpDto = new RequestSignUpDto(login, "password");
 
-        //when and then
-        this.mockMvc
-                .perform(buildRequest(signUpDto))
+        this.mockMvc.perform(MockMvcRequestBuilders
+                        .post("/auth/sign-up")
+                        .content(this.objectMapper.writeValueAsString(signUpDto))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(this.loginValidationMessageError());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.username_validation-error")
+                        .value("Login should be between 2 and 50 characters"));
     }
 
-    @Test
-    void itShouldReturn400CodeWhenTrimmedLoginConsistsOfLessThanTwoCharacters() throws Exception {
-        //given
-        String login = "           a          ";
-        RequestSignUpDto signUpDto = new RequestSignUpDto(login, "password");
-
-        //when and then
-        this.mockMvc
-                .perform(buildRequest(signUpDto))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(this.loginValidationMessageError());
-    }
-
-    @Test
-    void itShouldReturn400CodeWhenLoginConsistsOfWhiteSpacesOnly() throws Exception {
-        //given
-        String login = "   ";
-        RequestSignUpDto signUpDto = new RequestSignUpDto(login, "password");
-
-        //when and then
-        this.mockMvc
-                .perform(buildRequest(signUpDto))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(this.loginValidationMessageError());
-    }
-
-    @Test
-    void itShouldReturn400CodeWhenPasswordConsistsOfLessThanSixCharacters() throws Exception {
-        //given
-        String password = "12345";
+    @ParameterizedTest
+    @MethodSource("invalidPasswordProvider")
+    void itShouldReturn400CodeForInvalidPassword(String password) throws Exception {
         RequestSignUpDto signUpDto = new RequestSignUpDto("user", password);
 
-        //when and then
-        this.mockMvc
-                .perform(buildRequest(signUpDto))
+        this.mockMvc.perform(MockMvcRequestBuilders
+                        .post("/auth/sign-up")
+                        .content(this.objectMapper.writeValueAsString(signUpDto))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(this.passwordValidationMessageError());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.password_validation-error")
+                        .value("Password should be between 6 and 50 characters"));
     }
 
-    @Test
-    void itShouldReturn400CodeWhenPasswordConsistsOfMoreThanFiftyCharacters() throws Exception {
-        //given
-        String password = " ".repeat(51);
-        RequestSignUpDto signUpDto = new RequestSignUpDto("user", password);
-
-        //when and then
-        this.mockMvc
-                .perform(buildRequest(signUpDto))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(this.passwordValidationMessageError());
+    static Stream<String> invalidLoginProvider() {
+        return Stream.of(
+                "q".repeat(51),
+                "           a          ",
+                "   "
+        );
     }
 
-    private MockHttpServletRequestBuilder buildRequest(RequestSignUpDto signUpDto) throws JsonProcessingException {
-        return MockMvcRequestBuilders
-                .post("/auth/sign-up")
-                .content(this.objectMapper.writeValueAsString(signUpDto))
-                .contentType(MediaType.APPLICATION_JSON);
-    }
-
-    private ResultMatcher loginValidationMessageError() {
-       return MockMvcResultMatchers.jsonPath("$.username_validation-error")
-               .value("Login should be between 2 and 50 characters");
-    }
-
-    private ResultMatcher passwordValidationMessageError() {
-        return MockMvcResultMatchers.jsonPath("$.password_validation-error")
-                .value("Password should be between 6 and 50 characters");
+    static Stream<String> invalidPasswordProvider() {
+        return Stream.of(
+                "12345",
+                " ".repeat(51)
+        );
     }
 }
