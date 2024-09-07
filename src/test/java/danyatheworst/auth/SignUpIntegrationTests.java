@@ -1,7 +1,6 @@
-package danyatheworst;
+package danyatheworst.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import danyatheworst.auth.RequestSignUpDto;
 import danyatheworst.user.User;
 import danyatheworst.user.UserRepository;
 import org.junit.jupiter.api.AfterEach;

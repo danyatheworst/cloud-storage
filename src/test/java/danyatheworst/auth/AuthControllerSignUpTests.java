@@ -1,11 +1,7 @@
-package danyatheworst;
+package danyatheworst.auth;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import danyatheworst.auth.AuthController;
-import danyatheworst.auth.AuthenticationService;
-import danyatheworst.auth.RequestSignUpDto;
-import danyatheworst.auth.RegistrationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;

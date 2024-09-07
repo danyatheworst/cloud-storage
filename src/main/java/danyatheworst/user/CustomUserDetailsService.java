@@ -1,7 +1,6 @@
-package danyatheworst.storage;
+package danyatheworst.user;
 
 import danyatheworst.exceptions.InvalidCredentialsException;
-import danyatheworst.user.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
