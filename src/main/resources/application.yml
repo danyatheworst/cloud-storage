@@ -20,4 +20,4 @@ minio:
 #to handle exceptions
 server:
   tomcat:
-    relaxed-query-chars: '\,/'
+    relaxed-path-chars: '\'
