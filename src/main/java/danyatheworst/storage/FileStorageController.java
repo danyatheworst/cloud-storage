@@ -40,6 +40,18 @@ public class FileStorageController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @DeleteMapping("/objects")
+    public ResponseEntity<Void> deleteDirectory(
+            @RequestParam @Size(min = 1, max = 255) String path,
+            @AuthenticationPrincipal User user
+    ) {
+        path = path.trim();
+        pathValidation(path);
+
+        this.fileStorageService.deleteObject(path, user.getId());
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
     private void pathValidation(String path) {
         String[] segments = path.split("/");
 

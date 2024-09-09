@@ -5,6 +5,8 @@ import danyatheworst.user.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,8 +23,13 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+
+//TODO: create a parent test class with container etc and child test-classes for every case
+// (creation, deletion, renaming, uploading)
+// user-1-files/ helper func or smth
 
 @Testcontainers
 @SpringBootTest
@@ -121,5 +128,39 @@ public class FileStorageIntegrationTests {
                         .jsonPath("$.message")
                         .value(expectedMessage)
                 );
+    }
+
+    //TODO: a file deletion
+
+    @Test
+    void itShouldDeleteFileSystemObjectAndReturn200StatusCode() throws Exception {
+        //given
+        String path = "new-directory";
+        this.minioRepository.createObject("user-1-files/new-directory/");
+
+        //create some directories inside
+        for (int i = 0; i < 10; i++) {
+            this.minioRepository
+                    .createObject("user-1-files/new-directory/".concat(i + "/"));
+        }
+
+        //when and then
+        this.mockMvc.perform(MockMvcRequestBuilders.delete("/objects")
+                        .param("path", path)
+                        .with(SecurityMockMvcRequestPostProcessors.user(this.user))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers
+                        .status()
+                        .isOk()
+                );
+
+        String fullPath = "user-1-files/".concat(path).concat("/");
+        for (int i = 0; i < 20; i++) {
+            String dirInside = fullPath.concat(i + "/");
+            assertFalse(this.minioRepository.exists(dirInside));
+        }
+
+        boolean fileSystemObjectExists = this.minioRepository.exists(fullPath);
+        assertFalse(fileSystemObjectExists, fullPath.concat(" shouldn't be present in storage"));
     }
 }
