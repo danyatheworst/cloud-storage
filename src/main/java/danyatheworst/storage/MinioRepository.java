@@ -7,8 +7,10 @@ import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,7 +82,25 @@ public class MinioRepository {
             );
         } catch (Exception e) {
             throw new InternalError("Something went wrong during removing object");
+        }
+    }
 
+    public void uploadObject(MultipartFile file, String prefix) {
+        try {
+            InputStream inputStream = file.getInputStream();
+
+            this.client.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(this.bucket)
+                            .object(prefix)
+                            .stream(inputStream, file.getSize(), -1)
+                            .contentType(file.getContentType())
+                            .build()
+            );
+
+            inputStream.close();
+        } catch (Exception e) {
+            throw new InternalError("Something went wrong during an object uploading");
         }
     }
 

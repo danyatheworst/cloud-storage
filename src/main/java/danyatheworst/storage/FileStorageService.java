@@ -1,10 +1,10 @@
 package danyatheworst.storage;
 
-import danyatheworst.exceptions.EntityAlreadyExistsException;
 import danyatheworst.exceptions.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -15,36 +15,37 @@ public class FileStorageService {
     private final MinioRepository minioRepository;
 
     public void createDirectory(String path, Long userId) {
-        int lastSlashIdx = path.lastIndexOf("/");
-        if (lastSlashIdx != -1) {
-            String parentDirectory = path.substring(0, lastSlashIdx);
-            //race condition
-            if (!this.directoryExists(parentDirectory)) {
-                throw new EntityNotFoundException("No such directory: ".concat(parentDirectory));
-            }
-        }
-
-        String directoryPath = this.composeDirectoryPath(path, userId).concat("/");
-        if (this.minioRepository.exists(directoryPath)) {
-            throw new EntityAlreadyExistsException(directoryPath.concat(" already exists"));
-
-        }
-
+        String directoryPath = this.composeObjectPath(path, userId).concat("/");
         this.minioRepository.createObject(directoryPath);
     }
 
-    public boolean directoryExists(String path) {
-        return this.minioRepository.exists(path);
-    }
-
     public void deleteObject(String path, Long userId) {
-        path = this.composeDirectoryPath(path, userId);
+        path = this.composeObjectPath(path, userId);
         List<FileSystemObject> toDelete = this.minioRepository.getContentRecursively(path);
 
         toDelete.forEach(object -> this.minioRepository.removeObject(object.getPath()));
     }
 
-    private String composeDirectoryPath(String path, Long userId) {
+    public void uploadFile(MultipartFile file, String path, Long userId) {
+        this.minioRepository.uploadObject(file, this.composeObjectPath(path, userId));
+    }
+
+    public boolean directoryExists(String path, Long usedId) {
+        return this.minioRepository.exists(this.composeObjectPath(path, usedId).concat("/"));
+    }
+
+    public void parentExistenceValidation(String path, Long userId) {
+        int lastSlashIdx = path.lastIndexOf("/");
+        if (lastSlashIdx != -1) {
+            String parentDirectory = path.substring(0, lastSlashIdx);
+            //race condition
+            if (!this.directoryExists(parentDirectory, userId)) {
+                throw new EntityNotFoundException("No such directory: ".concat(parentDirectory));
+            }
+        }
+    }
+
+    private String composeObjectPath(String path, Long userId) {
         return "user-" + userId + "-files"
                 .concat("/")
                 .concat(path);

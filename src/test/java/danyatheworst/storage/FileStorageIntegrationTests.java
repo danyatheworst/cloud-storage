@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -91,10 +92,7 @@ public class FileStorageIntegrationTests {
         this.minioRepository.createObject("user-1-files/new-directory/");
 
         //when and then
-        String expectedMessage = "user-1-files/"
-                .concat(path)
-                .concat("/")
-                .concat(" already exists");
+        String expectedMessage = path.concat(" already exists");
         this.mockMvc.perform(MockMvcRequestBuilders.post("/directories")
                         .param("path", path)
                         .with(SecurityMockMvcRequestPostProcessors.user(this.user))
@@ -160,5 +158,62 @@ public class FileStorageIntegrationTests {
 
         boolean fileSystemObjectExists = this.minioRepository.exists(fullPath);
         assertFalse(fileSystemObjectExists, fullPath.concat(" shouldn't be present in storage"));
+    }
+
+    @Test
+    void itShouldUploadObjectAndReturn201StatusCode() throws Exception {
+        //given
+        String path = "";
+
+        MockMultipartFile file1 = new MockMultipartFile(
+                "files",
+                "folder/file1.txt",
+                "text/plain",
+                "someContent".getBytes()
+        );
+        MockMultipartFile file2 = new MockMultipartFile(
+                "files",
+                "folder/file2.txt",
+                "text/plain",
+                "someContent".getBytes()
+        );
+        MockMultipartFile file3 = new MockMultipartFile(
+                "files",
+                "folder/folder_inside/file3.txt",
+                "text/plain",
+                "someContent".getBytes()
+        );
+        MockMultipartFile file4 = new MockMultipartFile(
+                "files",
+                "folder/folder_inside/file4.txt",
+                "text/plain", "someContent".getBytes()
+        );
+        MockMultipartFile file5 = new MockMultipartFile(
+                "files",
+                "folder/folder_inside/one_more_folder/file5.txt",
+                "text/plain",
+                "someContent".getBytes()
+        );
+
+        // when and then
+        this.mockMvc.perform(MockMvcRequestBuilders.multipart("/objects/upload")
+                        .file(file1)
+                        .file(file2)
+                        .file(file3)
+                        .file(file4)
+                        .file(file5)
+                        .param("path", path)
+                        .with(SecurityMockMvcRequestPostProcessors.user(this.user))
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(MockMvcResultMatchers.status().isCreated());
+
+        assertTrue(this.minioRepository.exists("user-1-files/folder/"));
+        assertTrue(this.minioRepository.exists("user-1-files/folder/file1.txt"));
+        assertTrue(this.minioRepository.exists("user-1-files/folder/file2.txt"));
+        assertTrue(this.minioRepository.exists("user-1-files/folder/folder_inside/"));
+        assertTrue(this.minioRepository.exists("user-1-files/folder/folder_inside/file3.txt"));
+        assertTrue(this.minioRepository.exists("user-1-files/folder/folder_inside/file4.txt"));
+        assertTrue(this.minioRepository.exists("user-1-files/folder/folder_inside/one_more_folder/"));
+        assertTrue(this.minioRepository.exists("user-1-files/folder/folder_inside/one_more_folder/file5.txt"));
     }
 }

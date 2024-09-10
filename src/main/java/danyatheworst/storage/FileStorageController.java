@@ -1,5 +1,8 @@
 package danyatheworst.storage;
 
+import danyatheworst.common.ErrorResponseDto;
+import danyatheworst.exceptions.EntityAlreadyExistsException;
+import danyatheworst.exceptions.EntityNotFoundException;
 import danyatheworst.exceptions.InvalidParameterException;
 import danyatheworst.user.User;
 import jakarta.validation.constraints.*;
@@ -10,7 +13,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,7 +27,7 @@ import java.util.regex.Pattern;
 
 //file — for regular files (e.g., presentation.pdf, notes.txt, archive.zip etc), which are data objects.
 
-//FSO (file system object) — a generic term to refer to both files and folders
+//File System Object — a generic term to refer to both files and folders
 
 @AllArgsConstructor
 @Validated
@@ -30,18 +37,22 @@ public class FileStorageController {
 
     @PostMapping("/directories")
     public ResponseEntity<Void> createDirectory(
-            @RequestParam @Size(min = 1, max = 255) String path,
+            @RequestParam @Size(max = 255) String path,
             @AuthenticationPrincipal User user
     ) {
         path = path.trim();
         pathValidation(path);
-
+        boolean dirExists = this.fileStorageService.directoryExists(path, user.getId());
+        if (dirExists) {
+            throw new EntityAlreadyExistsException(path.concat(" already exists"));
+        }
+        this.fileStorageService.parentExistenceValidation(path, user.getId());
         this.fileStorageService.createDirectory(path, user.getId());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @DeleteMapping("/objects")
-    public ResponseEntity<Void> deleteDirectory(
+    public ResponseEntity<Void> deleteObject(
             @RequestParam @Size(min = 1, max = 255) String path,
             @AuthenticationPrincipal User user
     ) {
@@ -50,6 +61,55 @@ public class FileStorageController {
 
         this.fileStorageService.deleteObject(path, user.getId());
         return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
+    @PostMapping("/objects/upload")
+    public ResponseEntity<Void> uploadObject(
+            @RequestParam @Size(max = 255) String path,
+            @RequestBody @NotNull List<MultipartFile> files,
+            @AuthenticationPrincipal User user
+    ) {
+        //When a client sends an empty file field
+        //the files list contains one element where the filename is an empty string ("").
+        if (files.size() == 1 && files.get(0).getOriginalFilename().isEmpty()) {
+            throw new InvalidParameterException("files cannot be empty");
+        }
+
+        path = path.trim();
+        if (!path.isEmpty()) {
+            pathValidation(path);
+        }
+
+        this.fileStorageService.parentExistenceValidation(path, user.getId());
+
+        for (MultipartFile multipartFile : files) {
+            String filePath = multipartFile.getOriginalFilename();
+            this.handleNestedDirectories(filePath, user.getId());
+            this.fileStorageService.uploadFile(multipartFile, path.concat("/") + filePath, user.getId());
+        }
+
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponseDto> handleMaxSizeException(MaxUploadSizeExceededException e) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(
+                new ErrorResponseDto("File size exceeds the maximum allowed limit 400MB."));
+    }
+
+    private void handleNestedDirectories(String filePath, Long userId) {
+        int lastSlashIndex =  filePath.lastIndexOf("/");
+        if (lastSlashIndex == -1) {
+            return;
+        }
+        String[] segments = filePath
+                .substring(0, lastSlashIndex) //get only directories
+                .split("/");
+        StringJoiner stringJoiner = new StringJoiner("/");
+        for (String segment : segments) {
+            stringJoiner.add(segment);
+            this.fileStorageService.createDirectory(stringJoiner.toString(), userId);
+        }
     }
 
     private void pathValidation(String path) {
