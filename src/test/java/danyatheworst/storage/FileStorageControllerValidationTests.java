@@ -25,15 +25,18 @@ public class FileStorageControllerValidationTests {
     private FileStorageService fileStorageService;
 
     @MockBean
+    private FileStorageSearchService FileStorageSearchService;
+
+    @MockBean
     private SecurityFilterChain securityFilterChain;
 
     @ParameterizedTest
     @CsvSource({
-            "'/', 'Path is invalid.'",
-            "'///////', 'Path is invalid.'",
+            "'/', 'File name is invalid.'",
+            "'///////', 'File name is invalid.'",
             "'folder/.anotherFolder', 'File name can''t start with a dot.'",
             "'folder/some\\folder', 'File name can''t contain a backslash.'",
-            "'folder/some\nolder', 'Path can''t contain an escape sequence.'",
+            "'folder/some\nolder', 'File name can''t contain an escape sequence.'",
             "'folder/fo:lder', 'File name can''t contain a colon.'",
     })
     public void itShouldReturn400StatusCodeAndSpecificMessageWhenPassInInvalid(String path, String expectedMessage) throws Exception {

@@ -176,7 +176,7 @@ public class FileStorageIntegrationTests {
         );
 
         // when and then
-        this.mockMvc.perform(MockMvcRequestBuilders.multipart("/objects/upload")
+        this.mockMvc.perform(MockMvcRequestBuilders.multipart("/upload")
                         .file(file1)
                         .file(file2)
                         .file(file3)
@@ -243,18 +243,4 @@ public class FileStorageIntegrationTests {
                         .value(expectedMessage)
                 );
     }
-
-
-
-
-
-//    @Test
-//    void itShouldThrowEntityNotFoundExceptionWhenPathContainsNonExistentSegment() {
-//        //given
-//        String pathWithNonExistentSegment = "folder/another_folder/";
-//
-//        //when and then
-//        assertThrows(EntityNotFoundException.class, () ->
-//                this.fileStorageService.parentExistenceValidation(pathWithNonExistentSegment, user.getId()));
-//    }
 }

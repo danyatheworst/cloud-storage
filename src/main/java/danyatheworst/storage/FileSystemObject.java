@@ -2,11 +2,13 @@ package danyatheworst.storage;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @AllArgsConstructor
 public class FileSystemObject {
-    private final String path;
+    @Setter
+    private String path;
     private final String name;
     private final boolean isDir;
 }

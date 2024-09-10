@@ -14,8 +14,6 @@ import java.util.List;
 public class FileStorageService {
     private final MinioRepository minioRepository;
 
-    //TODO: directoryExists?? directoryExistenceValidation?
-
     public void createDirectory(String path, Long userId) {
         String directoryPath = this.composeObjectPath(path, userId).concat("/");
         this.minioRepository.createObject(directoryPath);

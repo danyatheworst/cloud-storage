@@ -22,18 +22,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-//directory — for directory-like objects that can contain other files or folders.
-//content — folders and files inside a directory
-
-//file — for regular files (e.g., presentation.pdf, notes.txt, archive.zip etc), which are data objects.
-
-//File System Object — a generic term to refer to both files and folders
-
 @AllArgsConstructor
 @Validated
 @RestController
 public class FileStorageController {
     private final FileStorageService fileStorageService;
+    private final FileStorageSearchService fileStorageSearchService;
 
     @PostMapping("/directories")
     public ResponseEntity<Void> createDirectory(
@@ -41,7 +35,7 @@ public class FileStorageController {
             @AuthenticationPrincipal User user
     ) {
         path = path.trim();
-        pathValidation(path);
+        fileNameValidation(path);
         boolean dirExists = this.fileStorageService.directoryExists(path, user.getId());
         if (dirExists) {
             throw new EntityAlreadyExistsException(path.concat(" already exists"));
@@ -57,7 +51,7 @@ public class FileStorageController {
             @AuthenticationPrincipal User user
     ) {
         path = path.trim();
-        pathValidation(path);
+        fileNameValidation(path);
         this.fileStorageService.directoryExists(path, user.getId());
 
         this.fileStorageService.deleteDirectory(path, user.getId());
@@ -70,14 +64,14 @@ public class FileStorageController {
             @AuthenticationPrincipal User user
     ) {
         path = path.trim();
-        pathValidation(path);
+        fileNameValidation(path);
         this.fileStorageService.fileExists(path, user.getId());
 
         this.fileStorageService.deleteFile(path, user.getId());
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
-    @PostMapping("/objects/upload")
+    @PostMapping("/upload")
     public ResponseEntity<Void> uploadObject(
             @RequestParam @Size(max = 255) String path,
             @RequestBody @NotNull List<MultipartFile> files,
@@ -91,7 +85,7 @@ public class FileStorageController {
 
         path = path.trim();
         if (!path.isEmpty()) {
-            pathValidation(path);
+            fileNameValidation(path);
         }
 
         this.fileStorageService.parentExistenceValidation(path, user.getId());
@@ -113,8 +107,8 @@ public class FileStorageController {
     ) {
         path = path.trim();
         newPath = newPath.trim();
-        pathValidation(path);
-        pathValidation(newPath);
+        fileNameValidation(path);
+        fileNameValidation(newPath);
 
         boolean dirExists = this.fileStorageService.directoryExists(path, user.getId());
         if (!dirExists) {
@@ -135,8 +129,8 @@ public class FileStorageController {
     ) {
         path = path.trim();
         newPath = newPath.trim();
-        pathValidation(path);
-        pathValidation(newPath);
+        fileNameValidation(path);
+        fileNameValidation(newPath);
 
         boolean fileExists = this.fileStorageService.fileExists(path, user.getId());
         if (!fileExists) {
@@ -147,6 +141,17 @@ public class FileStorageController {
         this.fileStorageService.renameFile(path, newPath, user.getId());
 
         return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<FileSystemObject>> search(
+            @RequestParam @Size(min = 1, max = 255) String name,
+            @AuthenticationPrincipal User user
+    ) {
+        name = name.trim();
+        fileNameValidation(name);
+        List<FileSystemObject> objects = this.fileStorageSearchService.search(name, user.getId());
+        return ResponseEntity.status(HttpStatus.OK).body(objects);
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
@@ -170,12 +175,12 @@ public class FileStorageController {
         }
     }
 
-    private void pathValidation(String path) {
+    private void fileNameValidation(String path) {
         String[] segments = path.split("/");
 
         //path contains only "/" characters ("/", "//", "///", "/////////...////" etc)
         if (segments.length == 0 && !path.isEmpty()) {
-            throw new InvalidParameterException("Path is invalid.");
+            throw new InvalidParameterException("File name is invalid.");
         }
 
         for (String segment : segments) {
@@ -196,7 +201,7 @@ public class FileStorageController {
             Matcher escapeSequenceMatcher = Pattern.compile(regex).matcher(segment);
 
             if (escapeSequenceMatcher.find()) {
-                throw new InvalidParameterException("Path can't contain an escape sequence.");
+                throw new InvalidParameterException("File name can't contain an escape sequence.");
             }
         }
     }
