@@ -243,4 +243,23 @@ public class FileStorageIntegrationTests {
                         .value(expectedMessage)
                 );
     }
+
+    @Test
+    void itShouldReturn200StatusCodeWhenNothingWasFoundUsingSearch() throws Exception {
+        //given
+        String name = "nonExistentFile";
+
+        //when and then
+        this.mockMvc.perform(MockMvcRequestBuilders.get("/search")
+                        .param("name", name)
+                        .with(SecurityMockMvcRequestPostProcessors.user(this.user))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers
+                        .status()
+                        .isOk())
+                .andExpect(MockMvcResultMatchers
+                        .content()
+                        .json("[]")
+                );
+    }
 }
