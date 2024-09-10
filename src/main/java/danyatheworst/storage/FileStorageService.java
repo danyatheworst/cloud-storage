@@ -21,11 +21,16 @@ public class FileStorageService {
         this.minioRepository.createObject(directoryPath);
     }
 
-    public void deleteObject(String path, Long userId) {
+    public void deleteDirectory(String path, Long userId) {
         path = this.composeObjectPath(path, userId).concat("/");
         List<FileSystemObject> toDelete = this.minioRepository.getContentRecursively(path);
 
         toDelete.forEach(object -> this.minioRepository.removeObject(object.getPath()));
+    }
+
+    public void deleteFile(String path, Long userId) {
+        String fullPath = this.composeObjectPath(path, userId);
+        this.minioRepository.removeObject(fullPath);
     }
 
     public void uploadFile(MultipartFile file, String path, Long userId) {
@@ -34,6 +39,10 @@ public class FileStorageService {
 
     public boolean directoryExists(String path, Long usedId) {
         return this.minioRepository.exists(this.composeObjectPath(path, usedId).concat("/"));
+    }
+
+    public boolean fileExists(String path, Long usedId) {
+        return this.minioRepository.exists(this.composeObjectPath(path, usedId));
     }
 
     public void parentExistenceValidation(String path, Long userId) {
@@ -59,7 +68,14 @@ public class FileStorageService {
                     String objectNewPath = newDirectoryPath.concat(relativeObjectPath);
                     this.minioRepository.copyObject(object.getPath(), objectNewPath);
                 });
-        this.deleteObject(path, userId);
+        this.deleteDirectory(path, userId);
+    }
+
+    public void renameFile(String path, String newPath, Long userId) {
+        String fullPath = this.composeObjectPath(path, userId);
+        String newFullPath = this.composeObjectPath(newPath, userId);
+        this.minioRepository.copyObject(fullPath, newFullPath);
+        this.deleteFile(path, userId);
     }
 
     private String composeObjectPath(String path, Long userId) {

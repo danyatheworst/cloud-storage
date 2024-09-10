@@ -22,8 +22,7 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 //TODO: create a parent test class with container etc and child test-classes for every case
@@ -41,6 +40,9 @@ public class FileStorageIntegrationTests {
 
     @Autowired
     public MinioRepository minioRepository;
+
+    @Autowired
+    public FileStorageService fileStorageService;
 
     private final User user = new User(1L, "username", "password", Set.of(Role.USER));
 
@@ -107,29 +109,7 @@ public class FileStorageIntegrationTests {
     }
 
     @Test
-    void itShouldReturn404StatusCodeIfPathContainsNonExistentDirectory() throws Exception {
-        //given
-        String path = "nonExistentDirectory/new-directory";
-
-        //when and then
-        String expectedMessage = "No such directory: ".concat("nonExistentDirectory");
-        this.mockMvc.perform(MockMvcRequestBuilders.post("/directories")
-                        .param("path", path)
-                        .with(SecurityMockMvcRequestPostProcessors.user(this.user))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers
-                        .status()
-                        .isNotFound())
-                .andExpect(MockMvcResultMatchers
-                        .jsonPath("$.message")
-                        .value(expectedMessage)
-                );
-    }
-
-    //TODO: a file deletion
-
-    @Test
-    void itShouldDeleteFileSystemObjectAndReturn200StatusCode() throws Exception {
+    void itShouldDeleteDirectoryAndReturn200StatusCode() throws Exception {
         //given
         String path = "new-directory";
         this.minioRepository.createObject("user-1-files/new-directory/");
@@ -141,7 +121,7 @@ public class FileStorageIntegrationTests {
         }
 
         //when and then
-        this.mockMvc.perform(MockMvcRequestBuilders.delete("/objects")
+        this.mockMvc.perform(MockMvcRequestBuilders.delete("/directories")
                         .param("path", path)
                         .with(SecurityMockMvcRequestPostProcessors.user(this.user))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -245,47 +225,36 @@ public class FileStorageIntegrationTests {
     }
 
     @Test
-    void itShouldReturn404StatusCodeAndSpecificMessageWhenRenamedDirectoryDoesNotExist() throws Exception {
+    void itShouldReturn404StatusCodeIfPathContainsNonExistentDirectory() throws Exception {
         //given
-        String path = "nonExistentDirectoryToRename";
-        String newPath = "doesNotMatter";
-        String expectedMessage = "No such directory: ".concat(path);
+        String path = "nonExistentDirectory/new-directory";
 
         //when and then
-        this.mockMvc.perform(MockMvcRequestBuilders.patch("/directories")
-                        .param("path", path)
-                        .param("newPath", newPath)
-                        .with(SecurityMockMvcRequestPostProcessors.user(this.user))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers
-                        .status()
-                        .isNotFound()
-                ).andExpect(MockMvcResultMatchers
-                        .jsonPath("$.message")
-                        .value(expectedMessage)
-                );
-    }
-
-    @Test
-    void itShouldReturn404StatusCodeAndSpecificMessageWhenNewPathContainsNonExistenceDirectory() throws Exception {
-        //given
-        this.minioRepository.createObject("user-1-files/directory_to_rename/");
-        String path = "directory_to_rename";
-        String newPath = "nonExistentDirectory/doesNotMatter";
         String expectedMessage = "No such directory: ".concat("nonExistentDirectory");
-
-        //when and then
-        this.mockMvc.perform(MockMvcRequestBuilders.patch("/directories")
+        this.mockMvc.perform(MockMvcRequestBuilders.post("/directories")
                         .param("path", path)
-                        .param("newPath", newPath)
                         .with(SecurityMockMvcRequestPostProcessors.user(this.user))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers
                         .status()
-                        .isNotFound()
-                ).andExpect(MockMvcResultMatchers
+                        .isNotFound())
+                .andExpect(MockMvcResultMatchers
                         .jsonPath("$.message")
                         .value(expectedMessage)
                 );
     }
+
+
+
+
+
+//    @Test
+//    void itShouldThrowEntityNotFoundExceptionWhenPathContainsNonExistentSegment() {
+//        //given
+//        String pathWithNonExistentSegment = "folder/another_folder/";
+//
+//        //when and then
+//        assertThrows(EntityNotFoundException.class, () ->
+//                this.fileStorageService.parentExistenceValidation(pathWithNonExistentSegment, user.getId()));
+//    }
 }

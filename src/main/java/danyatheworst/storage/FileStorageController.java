@@ -51,15 +51,29 @@ public class FileStorageController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @DeleteMapping("/objects")
-    public ResponseEntity<Void> deleteObject(
+    @DeleteMapping("/directories")
+    public ResponseEntity<Void> deleteDirectory(
             @RequestParam @Size(min = 1, max = 255) String path,
             @AuthenticationPrincipal User user
     ) {
         path = path.trim();
         pathValidation(path);
+        this.fileStorageService.directoryExists(path, user.getId());
 
-        this.fileStorageService.deleteObject(path, user.getId());
+        this.fileStorageService.deleteDirectory(path, user.getId());
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
+    @DeleteMapping("/files")
+    public ResponseEntity<Void> deleteFiles(
+            @RequestParam @Size(min = 1, max = 255) String path,
+            @AuthenticationPrincipal User user
+    ) {
+        path = path.trim();
+        pathValidation(path);
+        this.fileStorageService.fileExists(path, user.getId());
+
+        this.fileStorageService.deleteFile(path, user.getId());
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
@@ -109,6 +123,28 @@ public class FileStorageController {
         }
         this.fileStorageService.parentExistenceValidation(newPath, user.getId());
         this.fileStorageService.renameDirectory(path, newPath, user.getId());
+
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
+    @PatchMapping("/files")
+    public ResponseEntity<Void> renameFile(
+            @RequestParam @Size(min = 1, max = 255) String path,
+            @RequestParam("newPath") @Size(min = 1, max = 255) String newPath,
+            @AuthenticationPrincipal User user
+    ) {
+        path = path.trim();
+        newPath = newPath.trim();
+        pathValidation(path);
+        pathValidation(newPath);
+
+        boolean fileExists = this.fileStorageService.fileExists(path, user.getId());
+        if (!fileExists) {
+            throw new EntityNotFoundException("No such file: ".concat(path));
+
+        }
+        this.fileStorageService.parentExistenceValidation(newPath, user.getId());
+        this.fileStorageService.renameFile(path, newPath, user.getId());
 
         return ResponseEntity.status(HttpStatus.OK).build();
     }
