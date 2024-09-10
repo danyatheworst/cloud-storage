@@ -2,7 +2,6 @@ package danyatheworst.storage;
 
 import danyatheworst.common.ErrorResponseDto;
 import danyatheworst.exceptions.EntityAlreadyExistsException;
-import danyatheworst.exceptions.EntityNotFoundException;
 import danyatheworst.exceptions.InvalidParameterException;
 import danyatheworst.user.User;
 import jakarta.validation.constraints.*;

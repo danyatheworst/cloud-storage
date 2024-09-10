@@ -36,7 +36,7 @@ public class FileStorageControllerValidationTests {
             "'folder/some\nolder', 'Path can''t contain an escape sequence.'",
             "'folder/fo:lder', 'File name can''t contain a colon.'",
     })
-    public void itShouldReturn400StatusCodeAndSpecificMessage(String path, String expectedMessage) throws Exception {
+    public void itShouldReturn400StatusCodeAndSpecificMessageWhenPassInInvalid(String path, String expectedMessage) throws Exception {
         this.mockMvc.perform(MockMvcRequestBuilders.post("/directories")
                         .param("path", path)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -45,13 +45,13 @@ public class FileStorageControllerValidationTests {
                         .isBadRequest())
                 .andExpect(MockMvcResultMatchers
                         .jsonPath("$.message")
-                        .value(expectedMessage));
+                        .value(expectedMessage)
+                );
     }
 
     @ParameterizedTest
     @CsvSource({
-            "0, 'path size must be between 1 and 255'",
-            "256, 'path size must be between 1 and 255'"
+            "256, 'path size must be between 0 and 255'"
     })
     void itShouldReturnBadRequestForInvalidPathLength(int length, String expectedMessage) throws Exception {
         String path = generateStringOfLength(length);
@@ -65,7 +65,8 @@ public class FileStorageControllerValidationTests {
                         .isBadRequest())
                 .andExpect(MockMvcResultMatchers
                         .jsonPath("$.message")
-                        .value(expectedMessage));
+                        .value(expectedMessage)
+                );
     }
 
     private String generateStringOfLength(int length) {
