@@ -14,13 +14,15 @@ import java.util.List;
 public class FileStorageService {
     private final MinioRepository minioRepository;
 
+    //TODO: directoryExists?? directoryExistenceValidation?
+
     public void createDirectory(String path, Long userId) {
         String directoryPath = this.composeObjectPath(path, userId).concat("/");
         this.minioRepository.createObject(directoryPath);
     }
 
     public void deleteObject(String path, Long userId) {
-        path = this.composeObjectPath(path, userId);
+        path = this.composeObjectPath(path, userId).concat("/");
         List<FileSystemObject> toDelete = this.minioRepository.getContentRecursively(path);
 
         toDelete.forEach(object -> this.minioRepository.removeObject(object.getPath()));
@@ -43,6 +45,21 @@ public class FileStorageService {
                 throw new EntityNotFoundException("No such directory: ".concat(parentDirectory));
             }
         }
+    }
+
+    public void renameDirectory(String path, String newPath, Long userId) {
+        String directoryPath = this.composeObjectPath(path, userId).concat("/");
+        List<FileSystemObject> contentToMove = this.minioRepository.getContentRecursively(directoryPath);
+
+        String newDirectoryPath = this.composeObjectPath(newPath, userId).concat("/");
+
+        contentToMove
+                .forEach(object -> {
+                    String relativeObjectPath = object.getPath().substring(directoryPath.length());
+                    String objectNewPath = newDirectoryPath.concat(relativeObjectPath);
+                    this.minioRepository.copyObject(object.getPath(), objectNewPath);
+                });
+        this.deleteObject(path, userId);
     }
 
     private String composeObjectPath(String path, Long userId) {

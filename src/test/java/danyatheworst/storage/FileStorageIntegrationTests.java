@@ -216,4 +216,76 @@ public class FileStorageIntegrationTests {
         assertTrue(this.minioRepository.exists("user-1-files/folder/folder_inside/one_more_folder/"));
         assertTrue(this.minioRepository.exists("user-1-files/folder/folder_inside/one_more_folder/file5.txt"));
     }
+
+    @Test
+    void itShouldRenameDirectoryAndReturn200StatusCode() throws Exception {
+        //given
+        this.minioRepository.createObject("user-1-files/directory_to_rename/");
+        this.minioRepository.createObject("user-1-files/directory_to_rename/directory_nested_1/");
+        this.minioRepository.createObject("user-1-files/directory_to_rename/directory_nested_2/");
+
+        String path = "directory_to_rename";
+        String newPath = "directory_to_rename_RENAMED";
+
+        //when and then
+        this.mockMvc.perform(MockMvcRequestBuilders.patch("/directories")
+                        .param("path", path)
+                        .param("newPath", newPath)
+                        .with(SecurityMockMvcRequestPostProcessors.user(this.user))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers
+                        .status()
+                        .isOk()
+                );
+
+        assertFalse(this.minioRepository.exists("user-1-files/directory_to_rename/"));
+        assertTrue(this.minioRepository.exists("user-1-files/directory_to_rename_RENAMED/"));
+        assertTrue(this.minioRepository.exists("user-1-files/directory_to_rename_RENAMED/directory_nested_1/"));
+        assertTrue(this.minioRepository.exists("user-1-files/directory_to_rename_RENAMED/directory_nested_2/"));
+    }
+
+    @Test
+    void itShouldReturn404StatusCodeAndSpecificMessageWhenRenamedDirectoryDoesNotExist() throws Exception {
+        //given
+        String path = "nonExistentDirectoryToRename";
+        String newPath = "doesNotMatter";
+        String expectedMessage = "No such directory: ".concat(path);
+
+        //when and then
+        this.mockMvc.perform(MockMvcRequestBuilders.patch("/directories")
+                        .param("path", path)
+                        .param("newPath", newPath)
+                        .with(SecurityMockMvcRequestPostProcessors.user(this.user))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers
+                        .status()
+                        .isNotFound()
+                ).andExpect(MockMvcResultMatchers
+                        .jsonPath("$.message")
+                        .value(expectedMessage)
+                );
+    }
+
+    @Test
+    void itShouldReturn404StatusCodeAndSpecificMessageWhenNewPathContainsNonExistenceDirectory() throws Exception {
+        //given
+        this.minioRepository.createObject("user-1-files/directory_to_rename/");
+        String path = "directory_to_rename";
+        String newPath = "nonExistentDirectory/doesNotMatter";
+        String expectedMessage = "No such directory: ".concat("nonExistentDirectory");
+
+        //when and then
+        this.mockMvc.perform(MockMvcRequestBuilders.patch("/directories")
+                        .param("path", path)
+                        .param("newPath", newPath)
+                        .with(SecurityMockMvcRequestPostProcessors.user(this.user))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers
+                        .status()
+                        .isNotFound()
+                ).andExpect(MockMvcResultMatchers
+                        .jsonPath("$.message")
+                        .value(expectedMessage)
+                );
+    }
 }

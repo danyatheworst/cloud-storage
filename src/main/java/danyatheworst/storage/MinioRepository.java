@@ -52,7 +52,7 @@ public class MinioRepository {
         }
     }
 
-    public List<FileSystemObject> getContentRecursively(String prefix)  {
+    public List<FileSystemObject> getContentRecursively(String prefix) {
         try {
             List<FileSystemObject> objects = new ArrayList<>();
 
@@ -101,6 +101,22 @@ public class MinioRepository {
             inputStream.close();
         } catch (Exception e) {
             throw new InternalError("Something went wrong during an object uploading");
+        }
+    }
+
+    public void copyObject(String fromPrefix, String toPrefix) {
+        try {
+            this.client.copyObject(
+                    CopyObjectArgs.builder()
+                            .bucket(this.bucket)
+                            .object(toPrefix)
+                            .source(CopySource.builder()
+                                    .bucket(this.bucket)
+                                    .object(fromPrefix)
+                                    .build())
+                            .build());
+        } catch (Exception e) {
+            throw new InternalError("Something went wrong during an object copying");
         }
     }
 

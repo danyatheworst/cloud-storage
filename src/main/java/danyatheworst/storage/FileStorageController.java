@@ -2,6 +2,7 @@ package danyatheworst.storage;
 
 import danyatheworst.common.ErrorResponseDto;
 import danyatheworst.exceptions.EntityAlreadyExistsException;
+import danyatheworst.exceptions.EntityNotFoundException;
 import danyatheworst.exceptions.InvalidParameterException;
 import danyatheworst.user.User;
 import jakarta.validation.constraints.*;
@@ -90,6 +91,28 @@ public class FileStorageController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @PatchMapping("/directories")
+    public ResponseEntity<Void> renameDirectory(
+            @RequestParam @Size(min = 1, max = 255) String path,
+            @RequestParam("newPath") @Size(min = 1, max = 255) String newPath,
+            @AuthenticationPrincipal User user
+    ) {
+        path = path.trim();
+        newPath = newPath.trim();
+        pathValidation(path);
+        pathValidation(newPath);
+
+        boolean dirExists = this.fileStorageService.directoryExists(path, user.getId());
+        if (!dirExists) {
+            throw new EntityNotFoundException("No such directory: ".concat(path));
+
+        }
+        this.fileStorageService.parentExistenceValidation(newPath, user.getId());
+        this.fileStorageService.renameDirectory(path, newPath, user.getId());
+
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ErrorResponseDto> handleMaxSizeException(MaxUploadSizeExceededException e) {
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(
@@ -141,5 +164,4 @@ public class FileStorageController {
             }
         }
     }
-
 }
