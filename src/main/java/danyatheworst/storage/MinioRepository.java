@@ -52,6 +52,27 @@ public class MinioRepository {
         }
     }
 
+    public List<FileSystemObject> getContent(String prefix) {
+        try {
+            List<FileSystemObject> objects = new ArrayList<>();
+
+            Iterable<Result<Item>> results = this.client.listObjects(
+                    ListObjectsArgs.builder()
+                            .bucket(this.bucket)
+                            .prefix(prefix)
+                            .build()
+            );
+
+            for (Result<Item> result : results) {
+                objects.add(this.convert(result.get().objectName()));
+            }
+
+            return objects;
+        } catch (Exception e) {
+            throw new InternalError("Something went wrong during getting content");
+        }
+    }
+
     public List<FileSystemObject> getContentRecursively(String prefix) {
         try {
             List<FileSystemObject> objects = new ArrayList<>();
@@ -60,12 +81,14 @@ public class MinioRepository {
                     ListObjectsArgs.builder()
                             .bucket(this.bucket)
                             .prefix(prefix)
-                            .recursive(true)  // Recursive listing
+                            .recursive(true)
                             .build()
             );
+
             for (Result<Item> result : results) {
                 objects.add(this.convert(result.get().objectName()));
             }
+
             return objects;
         } catch (Exception e) {
             throw new InternalError("Something went wrong during getting content");

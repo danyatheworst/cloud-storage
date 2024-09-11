@@ -29,6 +29,19 @@ public class FileStorageController {
     private final FileStorageService fileStorageService;
     private final FileStorageSearchService fileStorageSearchService;
 
+    @GetMapping("/directories")
+    public ResponseEntity<List<FileSystemObject>> getContent(
+            @RequestParam @Size(max = 255) String path,
+            @AuthenticationPrincipal User user
+    ) {
+        path = path.trim();
+        if (!path.isEmpty()) {
+            fileNameValidation(path);
+        }
+        List<FileSystemObject> objects = this.fileStorageService.getContent(path, user.getId());
+        return ResponseEntity.status(HttpStatus.OK).body(objects);
+    }
+
     @PostMapping("/directories")
     public ResponseEntity<Void> createDirectory(
             @RequestParam @Size(max = 255) String path,

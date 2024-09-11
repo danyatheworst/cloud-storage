@@ -14,6 +14,25 @@ import java.util.List;
 public class FileStorageService {
     private final MinioRepository minioRepository;
 
+    public List<FileSystemObject> getContent(String path, Long userId) {
+        String composeObjectPath = this.composeObjectPath(path, userId);
+        String directoryPath = path.isEmpty() ? composeObjectPath : composeObjectPath.concat("/");
+
+        return this.minioRepository
+                    .getContent(directoryPath)
+                    .stream()
+                    .filter(object -> !object.getPath().equals(directoryPath))
+                    .map(object -> {
+                        String pathRootRemoved = object.getPath().substring(directoryPath.length());
+                        if (pathRootRemoved.endsWith("/")) {
+                            pathRootRemoved = pathRootRemoved.substring(0, pathRootRemoved.length() - 1);
+                        }
+                        object.setPath(pathRootRemoved);
+                        return object;
+                    })
+                    .toList();
+    }
+
     public void createDirectory(String path, Long userId) {
         String directoryPath = this.composeObjectPath(path, userId).concat("/");
         this.minioRepository.createObject(directoryPath);
@@ -33,25 +52,6 @@ public class FileStorageService {
 
     public void uploadFile(MultipartFile file, String path, Long userId) {
         this.minioRepository.uploadObject(file, this.composeObjectPath(path, userId));
-    }
-
-    public boolean directoryExists(String path, Long usedId) {
-        return this.minioRepository.exists(this.composeObjectPath(path, usedId).concat("/"));
-    }
-
-    public boolean fileExists(String path, Long usedId) {
-        return this.minioRepository.exists(this.composeObjectPath(path, usedId));
-    }
-
-    public void parentExistenceValidation(String path, Long userId) {
-        int lastSlashIdx = path.lastIndexOf("/");
-        if (lastSlashIdx != -1) {
-            String parentDirectory = path.substring(0, lastSlashIdx);
-            //race condition
-            if (!this.directoryExists(parentDirectory, userId)) {
-                throw new EntityNotFoundException("No such directory: ".concat(parentDirectory));
-            }
-        }
     }
 
     public void renameDirectory(String path, String newPath, Long userId) {
@@ -74,6 +74,25 @@ public class FileStorageService {
         String newFullPath = this.composeObjectPath(newPath, userId);
         this.minioRepository.copyObject(fullPath, newFullPath);
         this.deleteFile(path, userId);
+    }
+
+    public boolean directoryExists(String path, Long usedId) {
+        return this.minioRepository.exists(this.composeObjectPath(path, usedId).concat("/"));
+    }
+
+    public boolean fileExists(String path, Long usedId) {
+        return this.minioRepository.exists(this.composeObjectPath(path, usedId));
+    }
+
+    public void parentExistenceValidation(String path, Long userId) {
+        int lastSlashIdx = path.lastIndexOf("/");
+        if (lastSlashIdx != -1) {
+            String parentDirectory = path.substring(0, lastSlashIdx);
+            //race condition
+            if (!this.directoryExists(parentDirectory, userId)) {
+                throw new EntityNotFoundException("No such directory: ".concat(parentDirectory));
+            }
+        }
     }
 
     private String composeObjectPath(String path, Long userId) {

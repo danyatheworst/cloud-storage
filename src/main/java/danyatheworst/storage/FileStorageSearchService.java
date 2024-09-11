@@ -17,7 +17,11 @@ public class FileStorageSearchService {
                         .stream()
                         .filter(object -> object.getName().contains(name))
                         .map(object -> {
-                            object.setPath(object.getPath().substring(objectPath.length()));
+                            String pathRootRemoved = object.getPath().substring(objectPath.length());
+                            if (pathRootRemoved.endsWith("/")) {
+                                pathRootRemoved = pathRootRemoved.substring(0, pathRootRemoved.length() - 1);
+                            }
+                            object.setPath(pathRootRemoved);
                             return object;
                         })
                         .toList();
