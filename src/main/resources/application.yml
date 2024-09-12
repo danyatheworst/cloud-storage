@@ -21,8 +21,3 @@ spring:
 
 minio:
   bucket: "user-files"
-
-#to handle exceptions
-server:
-  tomcat:
-    relaxed-path-chars: '\'

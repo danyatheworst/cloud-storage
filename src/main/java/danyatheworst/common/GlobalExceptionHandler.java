@@ -1,6 +1,7 @@
 package danyatheworst.common;
 
 import danyatheworst.exceptions.*;
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,16 +20,9 @@ public class GlobalExceptionHandler {
         String firstErrorMessage = exception.getConstraintViolations()
                 .stream()
                 .findFirst()
-                .map(violation -> {
-                    String propertyPath = violation.getPropertyPath().toString();
-                    String parameterName = propertyPath.substring(propertyPath.lastIndexOf('.') + 1);
-                    return parameterName
-                            .concat(" ")
-                            .concat(violation.getMessage());
-                })
+                .map(ConstraintViolation::getMessage)
                 .orElse("Unknown validation error");
 
-        // Create ErrorResponseDto with the formatted first error message
         ErrorResponseDto errorResponseDto = new ErrorResponseDto(firstErrorMessage);
 
         return ResponseEntity

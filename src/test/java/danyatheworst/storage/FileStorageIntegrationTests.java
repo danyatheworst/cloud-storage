@@ -1,9 +1,11 @@
 package danyatheworst.storage;
 
+import danyatheworst.storage.service.FileStorageService;
 import danyatheworst.user.Role;
 import danyatheworst.user.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -67,6 +69,7 @@ public class FileStorageIntegrationTests {
     }
 
     @Test
+    @Order(1)
     void itShouldCreateDirectoryAndReturn201StatusCode() throws Exception {
         //given
         String path = "new-directory";
@@ -85,6 +88,26 @@ public class FileStorageIntegrationTests {
         boolean newDirectoryExists = this.minioRepository.exists(fullPath);
 
         assertTrue(newDirectoryExists, fullPath.concat(" should be present in storage"));
+    }
+
+    @Test
+    void itShouldReturn404StatusCodeIfPathContainsNonExistentDirectoryWhenCreatingDirectory() throws Exception {
+        //given
+        String path = "nonExistentDirectory/new-directory";
+
+        //when and then
+        String expectedMessage = "No such directory: " + "nonExistentDirectory";
+        this.mockMvc.perform(MockMvcRequestBuilders.post("/directories")
+                        .param("path", path)
+                        .with(SecurityMockMvcRequestPostProcessors.user(this.user))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers
+                        .status()
+                        .isNotFound())
+                .andExpect(MockMvcResultMatchers
+                        .jsonPath("$.message")
+                        .value(expectedMessage)
+                );
     }
 
     @Test
@@ -141,9 +164,29 @@ public class FileStorageIntegrationTests {
     }
 
     @Test
+    void itShouldDeleteFileAndReturn200StatusCode() throws Exception {
+        // given
+        String path = "file_to_delete.txt";
+        this.minioRepository.createObject("user-1-files/".concat(path));
+
+        // when and then
+        this.mockMvc.perform(MockMvcRequestBuilders.delete("/files")
+                        .param("path", path)
+                        .with(SecurityMockMvcRequestPostProcessors.user(this.user))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers
+                        .status()
+                        .isOk()
+                );
+
+        String fullPath = "user-1-files/".concat(path);
+        assertFalse(this.minioRepository.exists(fullPath), fullPath + " shouldn't be present in storage");
+    }
+
+    @Test
     void itShouldUploadObjectAndReturn201StatusCode() throws Exception {
         //given
-        String path = "";
+        String path = "/";
 
         MockMultipartFile file1 = new MockMultipartFile(
                 "files",
@@ -225,14 +268,16 @@ public class FileStorageIntegrationTests {
     }
 
     @Test
-    void itShouldReturn404StatusCodeIfPathContainsNonExistentDirectory() throws Exception {
+    void itShouldReturn404StatusCodeIfPathContainsNonExistentDirectoryWhenRenamingDirectory() throws Exception {
         //given
-        String path = "nonExistentDirectory/new-directory";
+        String path = "nonExistentDirectory/directory";
+        String newPath = "does_not_matter";
 
         //when and then
-        String expectedMessage = "No such directory: ".concat("nonExistentDirectory");
-        this.mockMvc.perform(MockMvcRequestBuilders.post("/directories")
+        String expectedMessage = "No such directory: " + "nonExistentDirectory/directory";
+        this.mockMvc.perform(MockMvcRequestBuilders.patch("/directories")
                         .param("path", path)
+                        .param("newPath", newPath)
                         .with(SecurityMockMvcRequestPostProcessors.user(this.user))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers
@@ -242,6 +287,134 @@ public class FileStorageIntegrationTests {
                         .jsonPath("$.message")
                         .value(expectedMessage)
                 );
+    }
+
+    @Test
+    void itShouldReturn404StatusCodeIfNewPathContainsNonExistentDirectoryWhenRenamingDirectory() throws Exception {
+        //given
+        this.minioRepository.createObject("user-1-files/directory_to_rename/");
+        String path = "directory_to_rename";
+        String newPath = "nonExistentDirectory/directory_RENAMED";
+
+        //when and then
+        String expectedMessage = "No such directory: " + "nonExistentDirectory";
+        this.mockMvc.perform(MockMvcRequestBuilders.patch("/directories")
+                        .param("path", path)
+                        .param("newPath", newPath)
+                        .with(SecurityMockMvcRequestPostProcessors.user(this.user))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers
+                        .status()
+                        .isNotFound())
+                .andExpect(MockMvcResultMatchers
+                        .jsonPath("$.message")
+                        .value(expectedMessage)
+                );
+    }
+
+    @Test
+    void itShouldReturn200StatusCodeIfPathEqualsNewPathWhenRenamingDirectory() throws Exception {
+        //given
+        String path = "directory/directory_1";
+        String newPath = "directory/directory_1";
+
+        //when and then
+        this.mockMvc.perform(MockMvcRequestBuilders.patch("/directories")
+                        .param("path", path)
+                        .param("newPath", newPath)
+                        .with(SecurityMockMvcRequestPostProcessors.user(this.user))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers
+                        .status()
+                        .isOk());
+    }
+
+    @Test
+    void itShouldReturn200StatusCodeIfPathEqualsNewPathWhenRenamingFile() throws Exception {
+        //given
+        String path = "directory/file.txt";
+        String newPath = "directory/file.txt";
+
+        //when and then
+        this.mockMvc.perform(MockMvcRequestBuilders.patch("/files")
+                        .param("path", path)
+                        .param("newPath", newPath)
+                        .with(SecurityMockMvcRequestPostProcessors.user(this.user))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers
+                        .status()
+                        .isOk());
+    }
+
+    @Test
+    void itShouldReturn409StatusCodeIfNewPathAlreadyExistsWhenRenamingDirectory() throws Exception {
+        this.minioRepository.createObject("user-1-files/directory/");
+        this.minioRepository.createObject("user-1-files/directory_to_rename/");
+
+        //given
+        String path = "directory";
+        String newPath = "directory_to_rename";
+        String expectedMessage = newPath + " already exists";
+
+        //when and then
+        this.mockMvc.perform(MockMvcRequestBuilders.patch("/directories")
+                        .param("path", path)
+                        .param("newPath", newPath)
+                        .with(SecurityMockMvcRequestPostProcessors.user(this.user))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers
+                        .status()
+                        .isConflict())
+                .andExpect(MockMvcResultMatchers
+                        .jsonPath("message")
+                        .value(expectedMessage)
+                );
+    }
+
+    @Test
+    void itShouldReturn409StatusCodeIfNewPathAlreadyExistsWhenRenamingFile() throws Exception {
+        this.minioRepository.createObject("user-1-files/file.txt");
+        this.minioRepository.createObject("user-1-files/file_to_rename.txt");
+
+        //given
+        String path = "file.txt";
+        String newPath = "file_to_rename.txt";
+        String expectedMessage = newPath + " already exists";
+
+        //when and then
+        this.mockMvc.perform(MockMvcRequestBuilders.patch("/files")
+                        .param("path", path)
+                        .param("newPath", newPath)
+                        .with(SecurityMockMvcRequestPostProcessors.user(this.user))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers
+                        .status()
+                        .isConflict())
+                .andExpect(MockMvcResultMatchers
+                        .jsonPath("message")
+                        .value(expectedMessage)
+                );
+    }
+
+    @Test
+    void itShouldRenameFileAndReturn200StatusCode() throws Exception {
+        this.minioRepository.createObject("user-1-files/file_to_rename.txt");
+
+        String path = "file_to_rename.txt";
+        String newPath = "file_to_rename_RENAMED.txt";
+
+        this.mockMvc.perform(MockMvcRequestBuilders.patch("/files")
+                        .param("path", path)
+                        .param("newPath", newPath)
+                        .with(SecurityMockMvcRequestPostProcessors.user(this.user))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers
+                        .status()
+                        .isOk()
+                );
+
+        assertFalse(this.minioRepository.exists("user-1-files/file_to_rename.txt"));
+        assertTrue(this.minioRepository.exists("user-1-files/file_to_rename_RENAMED.txt"));
     }
 
     @Test
