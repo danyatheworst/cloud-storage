@@ -4,7 +4,6 @@ import danyatheworst.exceptions.InvalidParameterException;
 import danyatheworst.storage.FileSystemObject;
 import danyatheworst.storage.service.FileStorageSearchService;
 import danyatheworst.user.User;
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
