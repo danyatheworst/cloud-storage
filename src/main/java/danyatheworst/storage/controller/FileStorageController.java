@@ -1,12 +1,11 @@
 package danyatheworst.storage.controller;
 
-import danyatheworst.storage.PathValidator;
 import danyatheworst.storage.FileSystemObject;
+import danyatheworst.storage.PathValidator;
 import danyatheworst.storage.service.FileStorageService;
 import danyatheworst.user.User;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
