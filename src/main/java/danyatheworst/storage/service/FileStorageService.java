@@ -5,7 +5,6 @@ import danyatheworst.exceptions.EntityNotFoundException;
 import danyatheworst.storage.FileSystemObject;
 import danyatheworst.storage.MinioRepository;
 import lombok.AllArgsConstructor;
-
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -123,6 +122,4 @@ public class FileStorageService {
     public boolean fileExists(String path, Long usedId) {
         return this.minioRepository.exists(this.pathService.composeFile(path, usedId));
     }
-
-
 }
