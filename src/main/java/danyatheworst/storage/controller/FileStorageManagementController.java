@@ -18,7 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 @Validated
 @RestController
-public class FileStorageController {
+public class FileStorageManagementController {
     private final FileStorageService fileStorageService;
     private final PathValidator pathValidator;
 
