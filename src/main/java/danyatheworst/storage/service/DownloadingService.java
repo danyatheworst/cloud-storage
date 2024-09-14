@@ -25,7 +25,7 @@ public class DownloadingService {
         List<FileSystemObject> contentToDownload = this.minioRepository
                 .getContentRecursively(this.pathComposer.composeDir(path, userId));
         if (contentToDownload.isEmpty()) {
-            throw new EntityNotFoundException("No such directory: " + path);
+            throw new EntityNotFoundException("No such file or directory: " + path);
         }
 
         List<ObjectBinary> objects = contentToDownload
