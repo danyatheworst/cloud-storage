@@ -52,7 +52,7 @@ public class FileStorageManagementController {
         path = path.trim();
         this.pathValidator.validate(path);
         this.fileStorageService.deleteDirectory(path, user.getId());
-        return ResponseEntity.status(HttpStatus.OK).build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @DeleteMapping("/files")
@@ -63,7 +63,7 @@ public class FileStorageManagementController {
         path = path.trim();
         this.pathValidator.validate(path);
         this.fileStorageService.deleteFile(path, user.getId());
-        return ResponseEntity.status(HttpStatus.OK).build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @PatchMapping("/directories")
@@ -77,7 +77,7 @@ public class FileStorageManagementController {
         if (!path.equals(newPath)) {
             this.fileStorageService.renameDirectory(path, newPath, user.getId());
         }
-        return ResponseEntity.status(HttpStatus.OK).build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @PatchMapping("/files")
@@ -94,6 +94,6 @@ public class FileStorageManagementController {
         if (!path.equals(newPath)) {
             this.fileStorageService.renameFile(path, newPath, user.getId());
         }
-        return ResponseEntity.status(HttpStatus.OK).build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
