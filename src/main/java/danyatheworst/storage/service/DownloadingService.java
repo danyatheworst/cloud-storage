@@ -20,7 +20,6 @@ public class DownloadingService {
     private final PathComposer pathComposer;
     private final Compressor zipCompressor;
 
-    //TODO: test 404
     public CompressedObject downloadDirectory(String path, Long userId) throws IOException {
         List<FileSystemObject> contentToDownload = this.minioRepository
                 .getContentRecursively(this.pathComposer.composeDir(path, userId));

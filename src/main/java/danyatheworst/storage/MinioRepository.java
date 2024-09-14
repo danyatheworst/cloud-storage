@@ -62,7 +62,7 @@ public class MinioRepository {
             Iterable<Result<Item>> results = this.client.listObjects(
                     ListObjectsArgs.builder()
                             .bucket(this.bucket)
-                            .prefix("qwe")
+                            .prefix(prefix)
                             .build()
             );
 
@@ -156,20 +156,15 @@ public class MinioRepository {
 
             return new ObjectBinary(prefix, extractName(prefix), stream);
         } catch (Exception e) {
-            handleEntityDoesNotExistException(e);
-
-            throw new InternalError("Something went wrong during a getting object inputStream");
-        }
-    }
-
-    private static void handleEntityDoesNotExistException(Exception e) {
-        if (e instanceof ErrorResponseException) {
-            ErrorResponse errorResponse = ((ErrorResponseException) e).errorResponse();
-            boolean doesNotExist = errorResponse.code().equals("NoSuchKey");
-            if (doesNotExist) {
-                String name = extractName(errorResponse.objectName());
-                throw new EntityNotFoundException("No such file or directory: " + name);
+            if (e instanceof ErrorResponseException) {
+                ErrorResponse errorResponse = ((ErrorResponseException) e).errorResponse();
+                boolean doesNotExist = errorResponse.code().equals("NoSuchKey");
+                if (doesNotExist) {
+                    String name = extractName(errorResponse.objectName());
+                    throw new EntityNotFoundException("No such file or directory: " + name);
+                }
             }
+            throw new InternalError("Something went wrong during a getting object inputStream");
         }
     }
 

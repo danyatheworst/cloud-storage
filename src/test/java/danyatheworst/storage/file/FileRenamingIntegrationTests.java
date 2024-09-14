@@ -66,4 +66,18 @@ public class FileRenamingIntegrationTests extends FileStorageIntegrationTests {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
+
+    @Test
+    void itShouldReturn404StatusCodeIfPathDoesNotExist() throws Exception {
+        String path = "nonExistentFile.txt";
+        String newPath = "does_not_matter_at_all";
+        String expectedMessage = "No such file or directory: " + path;
+
+        this.mockMvc.perform(MockMvcRequestBuilders.patch("/files")
+                        .param("path", path)
+                        .param("newPath", newPath)
+                        .with(authenticatedUser())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.jsonPath("message").value(expectedMessage));
+    }
 }

@@ -20,7 +20,6 @@ public class FileStorageService {
     public List<FileSystemObject> getContent(String path, Long userId) {
         String composeObjectPath = this.pathComposer.composeDir(path, userId);
 
-        //TODO: 200 if nothing
         return this.minioRepository
                     .getContent(composeObjectPath)
                     .stream()
@@ -82,8 +81,11 @@ public class FileStorageService {
         this.deleteDirectory(path, userId);
     }
 
-    //TODO: check if 404 test exists
     public void renameFile(String path, String newPath, Long userId) {
+        if (!this.minioRepository.exists(this.pathComposer.composeFile(path, userId))) {
+            throw new EntityNotFoundException("No such file or directory: " + path);
+        }
+
         this.parentExistenceValidation(newPath, userId);
 
         if (this.fileExists(newPath, userId)) {

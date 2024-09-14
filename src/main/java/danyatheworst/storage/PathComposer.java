@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class PathComposer {
-    //TODO: it'd be cool to init that bean with actual userId
+
     public String composeDir(String path, Long userId) {
         if (path.equals("/")) {
             return "user-" + userId + "-files/";
