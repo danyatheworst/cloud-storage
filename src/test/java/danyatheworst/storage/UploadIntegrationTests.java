@@ -24,7 +24,7 @@ public class UploadIntegrationTests extends FileStorageIntegrationTests {
                         .with(authenticatedUser()))
                 .andExpect(MockMvcResultMatchers.status().isCreated());
 
-        String dirFullPath = this.pathService.composeDir("folder", this.user.getId());
+        String dirFullPath = this.pathComposer.composeDir("folder", this.user.getId());
         String fileFullPath = dirFullPath + "file1.txt";
         assertTrue(this.minioRepository.exists(dirFullPath));
         assertTrue(this.minioRepository.exists(fileFullPath));

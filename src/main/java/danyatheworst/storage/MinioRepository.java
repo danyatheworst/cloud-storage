@@ -1,8 +1,11 @@
 package danyatheworst.storage;
 
+import danyatheworst.exceptions.EntityNotFoundException;
 import danyatheworst.exceptions.InternalServerException;
+import danyatheworst.storage.compressing.ObjectBinary;
 import io.minio.*;
 import io.minio.errors.ErrorResponseException;
+import io.minio.messages.ErrorResponse;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -59,12 +62,12 @@ public class MinioRepository {
             Iterable<Result<Item>> results = this.client.listObjects(
                     ListObjectsArgs.builder()
                             .bucket(this.bucket)
-                            .prefix(prefix)
+                            .prefix("qwe")
                             .build()
             );
 
             for (Result<Item> result : results) {
-                objects.add(this.convert(result.get().objectName()));
+                objects.add(convert(result.get().objectName()));
             }
 
             return objects;
@@ -86,7 +89,7 @@ public class MinioRepository {
             );
 
             for (Result<Item> result : results) {
-                objects.add(this.convert(result.get().objectName()));
+                objects.add(convert(result.get().objectName()));
             }
 
             return objects;
@@ -143,11 +146,42 @@ public class MinioRepository {
         }
     }
 
-    private FileSystemObject convert(String objectName) {
+    public ObjectBinary getObject(String prefix) {
+        try {
+            InputStream stream = this.client.getObject(
+                    GetObjectArgs.builder()
+                            .bucket(this.bucket)
+                            .object(prefix)
+                            .build());
+
+            return new ObjectBinary(prefix, extractName(prefix), stream);
+        } catch (Exception e) {
+            handleEntityDoesNotExistException(e);
+
+            throw new InternalError("Something went wrong during a getting object inputStream");
+        }
+    }
+
+    private static void handleEntityDoesNotExistException(Exception e) {
+        if (e instanceof ErrorResponseException) {
+            ErrorResponse errorResponse = ((ErrorResponseException) e).errorResponse();
+            boolean doesNotExist = errorResponse.code().equals("NoSuchKey");
+            if (doesNotExist) {
+                String name = extractName(errorResponse.objectName());
+                throw new EntityNotFoundException("No such file or directory: " + name);
+            }
+        }
+    }
+
+    private static FileSystemObject convert(String objectName) {
         //TODO: add size?, lastModified
-        String[] segments = objectName.split("/");
-        String name = segments[segments.length - 1];
+        String name = extractName(objectName);
         boolean isDir = objectName.endsWith("/");
         return new FileSystemObject(objectName, name, isDir);
+    }
+
+    private static String extractName(String path) {
+        String[] segments = path.split("/");
+        return segments[segments.length - 1];
     }
 }

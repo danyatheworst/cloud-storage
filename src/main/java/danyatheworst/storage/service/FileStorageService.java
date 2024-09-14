@@ -4,6 +4,7 @@ import danyatheworst.exceptions.EntityAlreadyExistsException;
 import danyatheworst.exceptions.EntityNotFoundException;
 import danyatheworst.storage.FileSystemObject;
 import danyatheworst.storage.MinioRepository;
+import danyatheworst.storage.PathComposer;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ public class FileStorageService {
     public List<FileSystemObject> getContent(String path, Long userId) {
         String composeObjectPath = this.pathComposer.composeDir(path, userId);
 
+        //TODO: 200 if nothing
         return this.minioRepository
                     .getContent(composeObjectPath)
                     .stream()
@@ -42,6 +44,7 @@ public class FileStorageService {
         this.minioRepository.createObject(directoryPath);
     }
 
+    //TODO: 200 if does not exist
     public void deleteDirectory(String path, Long userId) {
         path = this.pathComposer.composeDir(path, userId);
         List<FileSystemObject> toDelete = this.minioRepository.getContentRecursively(path);
@@ -49,17 +52,13 @@ public class FileStorageService {
         toDelete.forEach(object -> this.minioRepository.removeObject(object.getPath()));
     }
 
+    //TODO: 200 if does not exist
     public void deleteFile(String path, Long userId) {
         String fullPath = this.pathComposer.composeFile(path, userId);
         this.minioRepository.removeObject(fullPath);
     }
 
     public void renameDirectory(String path, String newPath, Long userId) {
-        //race condition
-        if (!this.directoryExists(path, userId)) {
-            throw new EntityNotFoundException("No such directory: ".concat(path));
-        }
-
         this.parentExistenceValidation(newPath, userId);
 
         if (this.directoryExists(newPath, userId)) {
@@ -68,6 +67,9 @@ public class FileStorageService {
 
         String directoryPath = this.pathComposer.composeDir(path, userId);
         List<FileSystemObject> contentToMove = this.minioRepository.getContentRecursively(directoryPath);
+        if (contentToMove.isEmpty()) {
+            throw new EntityNotFoundException("No such directory: " + path);
+        }
 
         String newDirectoryPath = this.pathComposer.composeDir(newPath, userId);
 
@@ -80,12 +82,8 @@ public class FileStorageService {
         this.deleteDirectory(path, userId);
     }
 
+    //TODO: check if 404 test exists
     public void renameFile(String path, String newPath, Long userId) {
-        //race condition
-        boolean fileExists = this.fileExists(path, userId);
-        if (!fileExists) {
-            throw new EntityNotFoundException("No such file: " + path);
-        }
         this.parentExistenceValidation(newPath, userId);
 
         if (this.fileExists(newPath, userId)) {
