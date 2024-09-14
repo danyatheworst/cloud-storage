@@ -2,6 +2,7 @@ package danyatheworst.storage.service;
 
 import danyatheworst.storage.FileSystemObject;
 import danyatheworst.storage.MinioRepository;
+import danyatheworst.storage.PathComposer;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -10,11 +11,11 @@ import java.util.List;
 @AllArgsConstructor
 @Service
 public class FileStorageSearchService {
-    private final PathService pathService;
+    private final PathComposer pathComposer;
     private final MinioRepository minioRepository;
 
     public List<FileSystemObject> search(String name, Long userId) {
-        String objectPath = this.pathService.composeDir("/", userId);
+        String objectPath = this.pathComposer.composeDir("/", userId);
                 return this.minioRepository
                         .getContentRecursively(objectPath)
                         .stream()

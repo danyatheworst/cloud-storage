@@ -13,7 +13,7 @@ public class FileDeletionIntegrationTests extends FileStorageIntegrationTests {
     @Test
     void itShouldDeleteFileAndReturn200StatusCode() throws Exception {
         String path = "file_to_delete.txt";
-        String fullPath = this.pathService.composeFile(path, user.getId());
+        String fullPath = this.pathComposer.composeFile(path, user.getId());
         this.minioRepository.createObject(fullPath);
 
         this.mockMvc.perform(MockMvcRequestBuilders.delete("/files")

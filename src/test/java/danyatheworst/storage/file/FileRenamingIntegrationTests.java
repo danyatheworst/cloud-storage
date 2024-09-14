@@ -16,9 +16,9 @@ public class FileRenamingIntegrationTests extends FileStorageIntegrationTests {
         // Create the original file
 
         String path = "file_to_rename.txt";
-        String fullPath = this.pathService.composeFile(path, user.getId());
+        String fullPath = this.pathComposer.composeFile(path, user.getId());
         String newPath = "file_to_rename_RENAMED.txt";
-        String fullNewPath = this.pathService.composeFile(newPath, user.getId());
+        String fullNewPath = this.pathComposer.composeFile(newPath, user.getId());
 
         this.minioRepository.createObject(fullPath);
 
@@ -40,8 +40,8 @@ public class FileRenamingIntegrationTests extends FileStorageIntegrationTests {
         //given
         String path = "file.txt";
         String newPath = "file_to_rename.txt";
-        this.minioRepository.createObject(this.pathService.composeFile(path, user.getId()));
-        this.minioRepository.createObject(this.pathService.composeFile(newPath, user.getId()));
+        this.minioRepository.createObject(this.pathComposer.composeFile(path, user.getId()));
+        this.minioRepository.createObject(this.pathComposer.composeFile(newPath, user.getId()));
         String expectedMessage = newPath + " already exists";
 
         //when

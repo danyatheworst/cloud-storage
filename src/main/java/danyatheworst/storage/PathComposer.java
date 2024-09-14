@@ -1,9 +1,10 @@
-package danyatheworst.storage.service;
+package danyatheworst.storage;
 
 import org.springframework.stereotype.Component;
 
 @Component
-public class PathService {
+public class PathComposer {
+    //TODO: it'd be cool to init that bean with actual userId
     public String composeDir(String path, Long userId) {
         if (path.equals("/")) {
             return "user-" + userId + "-files/";
@@ -20,5 +21,10 @@ public class PathService {
 
     public String composeFile(String path, Long userId) {
         return "user-" + userId + "-files/".concat(path);
+    }
+
+    public String removeRoot(String path, Long userId) {
+        String root = "user-" + userId + "-files/";
+        return path.substring(root.length());
     }
 }

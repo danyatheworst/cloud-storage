@@ -13,19 +13,18 @@ import java.util.List;
 @AllArgsConstructor
 @Service
 public class FileStorageService {
-    private final PathService pathService;
+    private final PathComposer pathComposer;
     private final MinioRepository minioRepository;
 
     public List<FileSystemObject> getContent(String path, Long userId) {
-        String composeObjectPath = this.pathService.composeDir(path, userId);
+        String composeObjectPath = this.pathComposer.composeDir(path, userId);
 
         return this.minioRepository
                     .getContent(composeObjectPath)
                     .stream()
                     .filter(object -> !object.getPath().equals(composeObjectPath))
                     .map(object -> {
-                        String pathRootRemoved = object.getPath().substring(composeObjectPath.length());
-                        object.setPath(pathRootRemoved);
+                        object.setPath(this.pathComposer.removeRoot(object.getPath(), userId));
                         return object;
                     })
                     .toList();
@@ -39,24 +38,19 @@ public class FileStorageService {
         }
         this.parentExistenceValidation(path, userId);
 
-        String directoryPath = this.pathService.composeDir(path, userId);
+        String directoryPath = this.pathComposer.composeDir(path, userId);
         this.minioRepository.createObject(directoryPath);
     }
 
     public void deleteDirectory(String path, Long userId) {
-        //race condition
-        this.directoryExists(path, userId);
-
-        path = this.pathService.composeDir(path, userId);
+        path = this.pathComposer.composeDir(path, userId);
         List<FileSystemObject> toDelete = this.minioRepository.getContentRecursively(path);
 
         toDelete.forEach(object -> this.minioRepository.removeObject(object.getPath()));
     }
 
     public void deleteFile(String path, Long userId) {
-        //race condition
-        this.fileExists(path, userId);
-        String fullPath = this.pathService.composeFile(path, userId);
+        String fullPath = this.pathComposer.composeFile(path, userId);
         this.minioRepository.removeObject(fullPath);
     }
 
@@ -72,10 +66,10 @@ public class FileStorageService {
             throw new EntityAlreadyExistsException(newPath + " already exists");
         }
 
-        String directoryPath = this.pathService.composeDir(path, userId);
+        String directoryPath = this.pathComposer.composeDir(path, userId);
         List<FileSystemObject> contentToMove = this.minioRepository.getContentRecursively(directoryPath);
 
-        String newDirectoryPath = this.pathService.composeDir(newPath, userId);
+        String newDirectoryPath = this.pathComposer.composeDir(newPath, userId);
 
         contentToMove
                 .forEach(object -> {
@@ -98,8 +92,8 @@ public class FileStorageService {
             throw new EntityAlreadyExistsException(newPath + " already exists");
         }
 
-        String fullPath = this.pathService.composeFile(path, userId);
-        String newFullPath = this.pathService.composeFile(newPath, userId);
+        String fullPath = this.pathComposer.composeFile(path, userId);
+        String newFullPath = this.pathComposer.composeFile(newPath, userId);
         this.minioRepository.copyObject(fullPath, newFullPath);
         this.deleteFile(path, userId);
     }
@@ -116,10 +110,10 @@ public class FileStorageService {
     }
 
     public boolean directoryExists(String path, Long usedId) {
-        return this.minioRepository.exists(this.pathService.composeDir(path, usedId));
+        return this.minioRepository.exists(this.pathComposer.composeDir(path, usedId));
     }
 
     public boolean fileExists(String path, Long usedId) {
-        return this.minioRepository.exists(this.pathService.composeFile(path, usedId));
+        return this.minioRepository.exists(this.pathComposer.composeFile(path, usedId));
     }
 }

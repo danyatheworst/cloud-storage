@@ -2,6 +2,7 @@ package danyatheworst.storage.service;
 
 import danyatheworst.exceptions.EntityNotFoundException;
 import danyatheworst.storage.MinioRepository;
+import danyatheworst.storage.PathComposer;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,12 +13,12 @@ import java.util.StringJoiner;
 @AllArgsConstructor
 @Service
 public class FileStorageUploadService {
-    private final PathService pathService;
+    private final PathComposer pathComposer;
     private final MinioRepository minioRepository;
 
     public void upload(List<MultipartFile> files, String path, Long userId) {
         //race condition
-        boolean dirExists = this.minioRepository.exists(this.pathService.composeDir(path, userId));
+        boolean dirExists = this.minioRepository.exists(this.pathComposer.composeDir(path, userId));
         if (!dirExists) {
             throw new EntityNotFoundException("No such directory: ".concat(path));
         }
@@ -31,7 +32,7 @@ public class FileStorageUploadService {
     }
 
     private void uploadFile(MultipartFile file, String path, Long userId) {
-        this.minioRepository.uploadObject(file, this.pathService.composeFile(path, userId));
+        this.minioRepository.uploadObject(file, this.pathComposer.composeFile(path, userId));
     }
 
     private void handleNestedDirectories(String filePath, Long userId) {
@@ -46,7 +47,7 @@ public class FileStorageUploadService {
         for (String segment : segments) {
             stringJoiner.add(segment);
 
-            String directoryPath = this.pathService.composeDir(stringJoiner.toString(), userId);
+            String directoryPath = this.pathComposer.composeDir(stringJoiner.toString(), userId);
             this.minioRepository.createObject(directoryPath);
         }
     }

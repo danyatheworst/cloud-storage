@@ -1,6 +1,5 @@
 package danyatheworst.storage;
 
-import danyatheworst.storage.service.PathService;
 import danyatheworst.user.Role;
 import danyatheworst.user.User;
 import org.junit.jupiter.api.AfterEach;
@@ -19,8 +18,6 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.util.Set;
 
-//TODO: when user is created "user-${userId}-files/" is created too
-
 @Testcontainers
 @SpringBootTest
 @ActiveProfiles("test")
@@ -33,7 +30,7 @@ public class FileStorageIntegrationTests {
     protected MinioRepository minioRepository;
 
     @Autowired
-    protected PathService pathService;
+    protected PathComposer pathComposer;
 
     protected final User user = new User(1L, "username", "password", Set.of(Role.USER));
 
@@ -47,13 +44,13 @@ public class FileStorageIntegrationTests {
 
     @BeforeEach
     void setup() {
-        this.minioRepository.createObject(this.pathService.composeDir("/", user.getId()));
+        this.minioRepository.createObject(this.pathComposer.composeDir("/", user.getId()));
     }
 
     @AfterEach
     void tearDown() {
         this.minioRepository
-                .getContentRecursively(this.pathService.composeDir("/", user.getId()))
+                .getContentRecursively(this.pathComposer.composeDir("/", user.getId()))
                 .forEach(object -> this.minioRepository.removeObject(object.getPath()));
     }
 

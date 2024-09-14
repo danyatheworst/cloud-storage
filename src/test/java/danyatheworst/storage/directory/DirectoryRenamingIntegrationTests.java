@@ -25,8 +25,8 @@ public class DirectoryRenamingIntegrationTests extends FileStorageIntegrationTes
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        String fullPath = this.pathService.composeDir(path, user.getId());
-        String newFullPath = this.pathService.composeDir(newPath, user.getId());
+        String fullPath = this.pathComposer.composeDir(path, user.getId());
+        String newFullPath = this.pathComposer.composeDir(newPath, user.getId());
         assertFalse(this.minioRepository.exists(fullPath));
         assertTrue(this.minioRepository.exists(newFullPath));
     }
@@ -50,8 +50,8 @@ public class DirectoryRenamingIntegrationTests extends FileStorageIntegrationTes
         // Given: Creating two directories
         String path = "directory";
         String newPath = "directory_to_rename";
-        this.minioRepository.createObject(this.pathService.composeDir(path, user.getId()));
-        this.minioRepository.createObject(this.pathService.composeDir(newPath, user.getId()));
+        this.minioRepository.createObject(this.pathComposer.composeDir(path, user.getId()));
+        this.minioRepository.createObject(this.pathComposer.composeDir(newPath, user.getId()));
 
         String expectedMessage = newPath + " already exists";
 

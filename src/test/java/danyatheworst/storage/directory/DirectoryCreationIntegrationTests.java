@@ -21,7 +21,7 @@ public class DirectoryCreationIntegrationTests extends FileStorageIntegrationTes
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isCreated());
 
-        String fullPath = this.pathService.composeDir(path, user.getId());
+        String fullPath = this.pathComposer.composeDir(path, user.getId());
         boolean newDirectoryExists = this.minioRepository.exists(fullPath);
 
         assertTrue(newDirectoryExists, fullPath.concat(" should be present in storage"));
@@ -43,7 +43,7 @@ public class DirectoryCreationIntegrationTests extends FileStorageIntegrationTes
     @Test
     void itShouldReturn409StatusCodeWhenDirectoryAlreadyExists() throws Exception {
         String path = "new-directory";
-        this.minioRepository.createObject(pathService.composeDir(path, user.getId()));
+        this.minioRepository.createObject(pathComposer.composeDir(path, user.getId()));
 
         String expectedMessage = path.concat(" already exists");
         this.mockMvc.perform(MockMvcRequestBuilders.post("/directories")
