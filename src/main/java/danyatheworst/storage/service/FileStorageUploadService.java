@@ -17,7 +17,6 @@ public class FileStorageUploadService {
     private final MinioRepository minioRepository;
 
     public void upload(List<MultipartFile> files, String path, Long userId) {
-        //race condition
         boolean dirExists = this.minioRepository.exists(this.pathComposer.composeDir(path, userId));
         if (!dirExists) {
             throw new EntityNotFoundException("No such directory: ".concat(path));

@@ -5,7 +5,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-public class DownloadingIntegrationTests extends FileStorageIntegrationTests {
+public class DownloadIntegrationTests extends FileStorageIntegrationTests {
 
     @Test
     void itShouldReturn404StatusCodeIfDirectoryToDownloadDoesNotExist() throws Exception {

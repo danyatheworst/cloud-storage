@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 public class DirectoryDeletionIntegrationTests extends FileStorageIntegrationTests {
 
     @Test
-    void itShouldDeleteDirectoryAndReturn200StatusCode() throws Exception {
+    void itShouldDeleteDirectoryAndReturn204StatusCode() throws Exception {
         String path = "new-directory";
         this.minioRepository.createObject(this.pathComposer.composeDir(path, user.getId()));
 
@@ -26,7 +26,7 @@ public class DirectoryDeletionIntegrationTests extends FileStorageIntegrationTes
                         .param("path", path)
                         .with(authenticatedUser())
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isOk());
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
 
         String fullPath = this.pathComposer.composeDir(path, user.getId());
         for (int i = 0; i < 10; i++) {
@@ -34,5 +34,18 @@ public class DirectoryDeletionIntegrationTests extends FileStorageIntegrationTes
         }
 
         assertFalse(this.minioRepository.exists(fullPath), fullPath.concat(" shouldn't be present in storage"));
+    }
+
+    @Test
+    void itShouldReturn404StatusAndIfPathDoesNotExist() throws Exception {
+        String path = "nonExistentDirectory";
+        String expectedMessage = "No such directory: " + path;
+
+        this.mockMvc.perform(MockMvcRequestBuilders.delete("/directories")
+                        .param("path", path)
+                        .with(authenticatedUser())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(MockMvcResultMatchers.jsonPath("message").value(expectedMessage));
     }
 }

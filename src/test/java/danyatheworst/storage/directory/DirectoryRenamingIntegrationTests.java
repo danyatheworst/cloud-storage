@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class DirectoryRenamingIntegrationTests extends FileStorageIntegrationTests {
 
     @Test
-    void itShouldRenameDirectoryAndReturn200StatusCode() throws Exception {
+    void itShouldRenameDirectoryAndReturn204StatusCode() throws Exception {
         this.minioRepository.createObject("user-1-files/directory_to_rename/");
         String path = "directory_to_rename";
         String newPath = "directory_to_rename_RENAMED";
@@ -23,7 +23,7 @@ public class DirectoryRenamingIntegrationTests extends FileStorageIntegrationTes
                         .param("newPath", newPath)
                         .with(authenticatedUser())
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isOk());
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
 
         String fullPath = this.pathComposer.composeDir(path, user.getId());
         String newFullPath = this.pathComposer.composeDir(newPath, user.getId());
@@ -32,7 +32,7 @@ public class DirectoryRenamingIntegrationTests extends FileStorageIntegrationTes
     }
 
     @Test
-    void itShouldReturn200StatusCodeIfPathEqualsNewPathWhenRenamingDirectory() throws Exception {
+    void itShouldReturn204StatusCodeIfPathEqualsNewPathWhenRenamingDirectory() throws Exception {
         String path = "directory/directory_1";
         String newPath = "directory/directory_1";
 
@@ -42,7 +42,7 @@ public class DirectoryRenamingIntegrationTests extends FileStorageIntegrationTes
                         .param("newPath", newPath)
                         .with(authenticatedUser())
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isOk());
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
     }
 
     @Test
@@ -62,6 +62,21 @@ public class DirectoryRenamingIntegrationTests extends FileStorageIntegrationTes
                         .with(authenticatedUser())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isConflict())
+                .andExpect(MockMvcResultMatchers.jsonPath("message").value(expectedMessage));
+    }
+
+    @Test
+    void itShouldReturn404StatusAndIfPathDoesNotExist() throws Exception {
+        String path = "nonExistentDirectory";
+        String newPath = "doesNotMatter";
+        String expectedMessage = "No such directory: " + path;
+
+        this.mockMvc.perform(MockMvcRequestBuilders.patch("/directories")
+                        .param("path", path)
+                        .param("newPath", newPath)
+                        .with(authenticatedUser())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
                 .andExpect(MockMvcResultMatchers.jsonPath("message").value(expectedMessage));
     }
 }

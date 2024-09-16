@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class FileRenamingIntegrationTests extends FileStorageIntegrationTests {
 
     @Test
-    void itShouldRenameFileAndReturn200StatusCode() throws Exception {
+    void itShouldRenameFileAndReturn204StatusCode() throws Exception {
         // Create the original file
 
         String path = "file_to_rename.txt";
@@ -28,7 +28,7 @@ public class FileRenamingIntegrationTests extends FileStorageIntegrationTests {
                         .param("newPath", newPath)
                         .with(authenticatedUser())
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isOk());
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
 
         // Check that the original file no longer exists and the new file exists
         assertFalse(this.minioRepository.exists(fullPath));
@@ -55,7 +55,7 @@ public class FileRenamingIntegrationTests extends FileStorageIntegrationTests {
     }
 
     @Test
-    void itShouldReturn200StatusCodeIfPathEqualsNewPathWhenRenamingFile() throws Exception {
+    void itShouldReturn204StatusCodeIfPathEqualsNewPathWhenRenamingFile() throws Exception {
         String path = "directory/file.txt";
         String newPath = "directory/file.txt";
 
@@ -64,14 +64,14 @@ public class FileRenamingIntegrationTests extends FileStorageIntegrationTests {
                         .param("newPath", newPath)
                         .with(authenticatedUser())
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isOk());
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
     }
 
     @Test
     void itShouldReturn404StatusCodeIfPathDoesNotExist() throws Exception {
         String path = "nonExistentFile.txt";
-        String newPath = "does_not_matter_at_all";
-        String expectedMessage = "No such file or directory: " + path;
+        String newPath = "does_not_matter_at_all.txt";
+        String expectedMessage = "No such file: " + path;
 
         this.mockMvc.perform(MockMvcRequestBuilders.patch("/files")
                         .param("path", path)

@@ -18,12 +18,17 @@ public class FileStorageService {
     private final MinioRepository minioRepository;
 
     public List<FileSystemObject> getContent(String path, Long userId) {
-        String composeObjectPath = this.pathComposer.composeDir(path, userId);
+        String composedObjectPath = this.pathComposer.composeDir(path, userId);
+
+        boolean exists = this.minioRepository.exists(composedObjectPath);
+        if (!exists) {
+            throw new EntityNotFoundException("No such directory: " + path);
+        }
 
         return this.minioRepository
-                    .getContent(composeObjectPath)
+                    .getContent(composedObjectPath)
                     .stream()
-                    .filter(object -> !object.getPath().equals(composeObjectPath))
+                    .filter(object -> !object.getPath().equals(composedObjectPath))
                     .map(object -> {
                         object.setPath(this.pathComposer.removeRoot(object.getPath(), userId));
                         return object;
@@ -32,7 +37,6 @@ public class FileStorageService {
     }
 
     public void createDirectory(String path, Long userId) {
-        //race condition
         boolean dirExists = this.directoryExists(path, userId);
         if (dirExists) {
             throw new EntityAlreadyExistsException(path + " already exists");
@@ -43,23 +47,30 @@ public class FileStorageService {
         this.minioRepository.createObject(directoryPath);
     }
 
-    //TODO: 200 if does not exist
     public void deleteDirectory(String path, Long userId) {
-        path = this.pathComposer.composeDir(path, userId);
-        List<FileSystemObject> toDelete = this.minioRepository.getContentRecursively(path);
+        String composedObjectPath = this.pathComposer.composeDir(path, userId);
+        List<FileSystemObject> toDelete = this.minioRepository.getContentRecursively(composedObjectPath);
+
+        if (toDelete.isEmpty()) {
+            throw new EntityNotFoundException("No such directory: " + path);
+        }
 
         toDelete.forEach(object -> this.minioRepository.removeObject(object.getPath()));
     }
 
-    //TODO: 200 if does not exist
     public void deleteFile(String path, Long userId) {
+        String composedObjectPath = this.pathComposer.composeFile(path, userId);
+
+        boolean exists = this.minioRepository.exists(composedObjectPath);
+        if (!exists) {
+            throw new EntityNotFoundException("No such file: " + path);
+        }
+
         String fullPath = this.pathComposer.composeFile(path, userId);
         this.minioRepository.removeObject(fullPath);
     }
 
     public void renameDirectory(String path, String newPath, Long userId) {
-        this.parentExistenceValidation(newPath, userId);
-
         if (this.directoryExists(newPath, userId)) {
             throw new EntityAlreadyExistsException(newPath + " already exists");
         }
@@ -82,8 +93,9 @@ public class FileStorageService {
     }
 
     public void renameFile(String path, String newPath, Long userId) {
-        if (!this.minioRepository.exists(this.pathComposer.composeFile(path, userId))) {
-            throw new EntityNotFoundException("No such file or directory: " + path);
+        String composedObjectPath = this.pathComposer.composeFile(path, userId);
+        if (!this.minioRepository.exists(composedObjectPath)) {
+            throw new EntityNotFoundException("No such file: " + path);
         }
 
         this.parentExistenceValidation(newPath, userId);
@@ -92,9 +104,8 @@ public class FileStorageService {
             throw new EntityAlreadyExistsException(newPath + " already exists");
         }
 
-        String fullPath = this.pathComposer.composeFile(path, userId);
         String newFullPath = this.pathComposer.composeFile(newPath, userId);
-        this.minioRepository.copyObject(fullPath, newFullPath);
+        this.minioRepository.copyObject(composedObjectPath, newFullPath);
         this.deleteFile(path, userId);
     }
 
@@ -102,9 +113,9 @@ public class FileStorageService {
         int lastSlashIdx = path.lastIndexOf("/");
         if (lastSlashIdx != -1) {
             String parentDirectory = path.substring(0, lastSlashIdx);
-            //race condition
+
             if (!this.directoryExists(parentDirectory, userId)) {
-                throw new EntityNotFoundException("No such directory: ".concat(parentDirectory));
+                throw new EntityNotFoundException("No such directory: " + parentDirectory);
             }
         }
     }
