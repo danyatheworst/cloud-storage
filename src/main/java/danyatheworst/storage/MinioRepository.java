@@ -14,6 +14,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -67,9 +69,8 @@ public class MinioRepository {
             );
 
             for (Result<Item> result : results) {
-                objects.add(convert(result.get().objectName()));
+                objects.add(convert(result.get()));
             }
-
             return objects;
         } catch (Exception e) {
             throw new InternalError("Something went wrong during getting content");
@@ -89,7 +90,7 @@ public class MinioRepository {
             );
 
             for (Result<Item> result : results) {
-                objects.add(convert(result.get().objectName()));
+                objects.add(convert(result.get()));
             }
 
             return objects;
@@ -168,11 +169,19 @@ public class MinioRepository {
         }
     }
 
-    private static FileSystemObject convert(String objectName) {
-        //TODO: add size?, lastModified
+    private static FileSystemObject convert(Item item) {
+        String objectName = item.objectName();
         String name = extractName(objectName);
         boolean isDir = objectName.endsWith("/");
-        return new FileSystemObject(objectName, name, isDir);
+        return new FileSystemObject(objectName, name, isDir, localDateTime(item));
+    }
+
+    private static LocalDateTime localDateTime(Item item) {
+        try {
+            return item.lastModified().toLocalDateTime();
+        } catch (NullPointerException e) {
+            return null;
+        }
     }
 
     private static String extractName(String path) {
