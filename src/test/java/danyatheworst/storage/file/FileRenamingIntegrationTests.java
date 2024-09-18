@@ -1,6 +1,6 @@
 package danyatheworst.storage.file;
 
-import danyatheworst.storage.FileStorageIntegrationTests;
+import danyatheworst.storage.AbstractFileStorageIntegrationTests;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -9,7 +9,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class FileRenamingIntegrationTests extends FileStorageIntegrationTests {
+public class FileRenamingIntegrationTests extends AbstractFileStorageIntegrationTests {
 
     @Test
     void itShouldRenameFileAndReturn204StatusCode() throws Exception {

@@ -1,6 +1,6 @@
 package danyatheworst.storage.directory;
 
-import danyatheworst.storage.FileStorageIntegrationTests;
+import danyatheworst.storage.AbstractFileStorageIntegrationTests;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -8,7 +8,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-public class DirectoryDeletionIntegrationTests extends FileStorageIntegrationTests {
+public class DirectoryDeletionIntegrationTests extends AbstractFileStorageIntegrationTests {
 
     @Test
     void itShouldDeleteDirectoryAndReturn204StatusCode() throws Exception {

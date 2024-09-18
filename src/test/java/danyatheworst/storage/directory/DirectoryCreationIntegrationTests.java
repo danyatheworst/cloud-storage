@@ -1,6 +1,6 @@
 package danyatheworst.storage.directory;
 
-import danyatheworst.storage.FileStorageIntegrationTests;
+import danyatheworst.storage.AbstractFileStorageIntegrationTests;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
@@ -9,7 +9,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class DirectoryCreationIntegrationTests extends FileStorageIntegrationTests {
+public class DirectoryCreationIntegrationTests extends AbstractFileStorageIntegrationTests {
 
     @Test
     void itShouldCreateDirectoryAndReturn201StatusCode() throws Exception {

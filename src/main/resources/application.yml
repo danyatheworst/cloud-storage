@@ -1,23 +1,16 @@
 spring:
+
+  profiles:
+    default: dev
+
   datasource:
-    url: jdbc:postgresql://localhost:5555/qq
-    username: postgres
-    password: postgres
     driver-class-name: org.postgresql.Driver
-  jpa:
-    show-sql: true
-    hibernate:
-      ddl-auto: update
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      database: 0
+
   servlet:
     multipart:
       max-file-size: 400MB
       max-request-size: 400MB
       resolve-lazily: true
-
-minio:
-  bucket: "user-files"
+  sql:
+    init:
+      mode: always

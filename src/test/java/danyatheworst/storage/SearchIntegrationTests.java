@@ -9,7 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-public class SearchIntegrationTests extends FileStorageIntegrationTests {
+public class SearchIntegrationTests extends AbstractFileStorageIntegrationTests {
 
     @Test
     void itShouldReturn200StatusCodeWhenNothingWasFoundUsingSearch() throws Exception {

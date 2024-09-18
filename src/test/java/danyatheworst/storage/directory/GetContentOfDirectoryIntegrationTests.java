@@ -1,12 +1,12 @@
 package danyatheworst.storage.directory;
 
-import danyatheworst.storage.FileStorageIntegrationTests;
+import danyatheworst.storage.AbstractFileStorageIntegrationTests;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-public class GetContentOfDirectoryIntegrationTests extends FileStorageIntegrationTests {
+public class GetContentOfDirectoryIntegrationTests extends AbstractFileStorageIntegrationTests {
     @Test
     void itShouldReturn404StatusAndIfPathDoesNotExist() throws Exception {
         String path = "nonExistentDirectory";

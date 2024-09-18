@@ -1,0 +1,22 @@
+spring:
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/database-dev
+    username: username
+    password: password
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+
+minio:
+  url: http://localhost:9000
+  username: username
+  password: password
+  bucket: user-files-dev
