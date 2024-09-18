@@ -27,7 +27,18 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @SpringBootTest
 public class SignUpIntegrationTests {
     @Container
-    private static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14-alpine");
+    private static final PostgreSQLContainer<?> postgres =
+            new PostgreSQLContainer<>("postgres:14-alpine")
+                    .withDatabaseName("database-test")
+                    .withUsername("username-test")
+                    .withPassword("password-test");
+
+    @DynamicPropertySource
+    static void registerPgProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+    }
 
     @Autowired
     private MockMvc mockMvc;
@@ -46,14 +57,6 @@ public class SignUpIntegrationTests {
         this.userRepository.deleteAll();
     }
 
-    @DynamicPropertySource
-    private static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.jpa.ddl-auto", () -> "update");
-    }
-
     @Test
     public void itShouldInsertUserIntoDatabaseAndReturn201StatusCode() throws Exception {
         //given
@@ -68,7 +71,7 @@ public class SignUpIntegrationTests {
                 .andExpect(MockMvcResultMatchers.status().isCreated());
 
         Assertions.assertEquals(this.userRepository.findAll().size(), 1);
-        Assertions.assertEquals(this.userRepository.findByUsername("user").get().getUsername(), login);
+        Assertions.assertEquals(this.userRepository.findByUsername(login).get().getUsername(), login);
     }
 
     @Test
