@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS users(
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE CHECK (LENGTH(username) >= 2),
+    password VARCHAR(50) NOT NULL CHECK (LENGTH(password) >= 6)
+);
