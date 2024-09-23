@@ -1,6 +1,7 @@
 package danyatheworst.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import danyatheworst.auth.dto.RequestSignUpDto;
 import danyatheworst.storage.service.FileStorageService;
 import danyatheworst.user.User;
 import danyatheworst.user.UserRepository;

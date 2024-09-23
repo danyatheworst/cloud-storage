@@ -1,5 +1,6 @@
 package danyatheworst.auth;
 
+import danyatheworst.auth.dto.RequestSignUpDto;
 import danyatheworst.exceptions.EntityAlreadyExistsException;
 import danyatheworst.storage.service.FileStorageService;
 import danyatheworst.user.Role;

@@ -1,7 +1,7 @@
 package danyatheworst.storage;
 
 import danyatheworst.auth.RegistrationService;
-import danyatheworst.auth.RequestSignUpDto;
+import danyatheworst.auth.dto.RequestSignUpDto;
 import danyatheworst.config.minio.MinioClientConfiguration;
 import danyatheworst.storage.service.FileStorageService;
 import danyatheworst.user.User;

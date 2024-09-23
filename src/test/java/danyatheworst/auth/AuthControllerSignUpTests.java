@@ -1,6 +1,7 @@
 package danyatheworst.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import danyatheworst.auth.dto.RequestSignUpDto;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
