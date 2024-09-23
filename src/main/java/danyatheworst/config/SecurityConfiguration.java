@@ -1,8 +1,10 @@
 package danyatheworst.config;
 
 import danyatheworst.user.CustomUserDetailsService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -15,14 +17,23 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Configuration
 @EnableWebMvc
 public class SecurityConfiguration {
 
     private final CustomUserDetailsService customUserDetailsService;
+    private final List<String> allowedOrigins;
 
-    public SecurityConfiguration(CustomUserDetailsService customUserDetailsService) {
+    public SecurityConfiguration(CustomUserDetailsService customUserDetailsService, Environment env) {
         this.customUserDetailsService = customUserDetailsService;
+        this.allowedOrigins = Arrays.stream(
+                        env.getProperty("security.cors.allowed-origins")
+                                .split(", ")
+                )
+                .toList();
     }
 
     @Bean
@@ -47,13 +58,14 @@ public class SecurityConfiguration {
                 .cors(c -> c.configurationSource(this.corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
-                        .anyRequest().permitAll())
+                        .anyRequest().authenticated()
+                )
                 .build();
     }
 
     private UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("http://localhost:3000");
+        configuration.setAllowedOrigins(this.allowedOrigins);
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
         configuration.setAllowCredentials(true);

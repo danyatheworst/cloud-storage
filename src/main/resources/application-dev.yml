@@ -20,3 +20,7 @@ minio:
   username: username
   password: password
   bucket: user-files-dev
+
+security:
+  cors:
+    allowed-origins: "http://localhost:3000, http://localhost:8080, http://localhost:4200"
