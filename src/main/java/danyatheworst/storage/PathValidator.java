@@ -32,7 +32,7 @@ public class PathValidator {
             }
 
             if (segment.isEmpty()) {
-                throw new InvalidParameterException("Path can't contain with two or more slashes next to each other");
+                throw new InvalidParameterException("Path can't begin with slash or contain two slashes next to each other");
             }
         }
     }
