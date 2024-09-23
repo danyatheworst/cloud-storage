@@ -2,7 +2,7 @@ package danyatheworst.storage;
 
 import danyatheworst.auth.RegistrationService;
 import danyatheworst.auth.RequestSignUpDto;
-import danyatheworst.config.MinioConfiguration;
+import danyatheworst.config.minio.MinioClientConfiguration;
 import danyatheworst.storage.service.FileStorageService;
 import danyatheworst.user.User;
 import danyatheworst.user.UserRepository;
@@ -30,7 +30,7 @@ import static org.mockito.Mockito.when;
 @SpringBootTest(classes = {
         RegistrationService.class,
         MinioRepository.class,
-        MinioConfiguration.class,
+        MinioClientConfiguration.class,
         FileStorageService.class,
         PathComposer.class
 })

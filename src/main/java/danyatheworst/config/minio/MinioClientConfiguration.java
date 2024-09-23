@@ -1,4 +1,4 @@
-package danyatheworst.config;
+package danyatheworst.config.minio;
 
 import io.minio.MinioClient;
 import org.springframework.beans.factory.annotation.Value;
@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 
 
 @Configuration
-public class MinioConfiguration {
+public class MinioClientConfiguration {
     @Value("${minio.url}")
     private String url;
 
